@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es" data-cms-wait>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Daniel Higueras Alba · Director y realizador</title>
+<meta name="description" content="Daniel Higueras Alba, director, realizador y videógrafo en Madrid. Documental, videoclip y publicidad.">
+<meta property="og:title" content="Daniel Higueras Alba · Director y realizador">
+<meta property="og:description" content="Documental, videoclip y publicidad en Madrid.">
+<meta property="og:image" content="/img/grito.jpg">
+<meta name="theme-color" content="#0b0b0b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@300;400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+
+<div class="bg" aria-hidden="true">
+  <figure class="f-grito" data-for="inicio"></figure>
+  <figure class="f-der" data-for="portfolio"></figure>
+  <figure class="f-izq" data-for="bio"></figure>
+  <figure class="f-frontal" data-for="contacto"></figure>
+  <figure class="f-redes" data-for="redes"></figure>
+</div>
+<canvas id="grain" aria-hidden="true"></canvas>
+<div class="scrim" aria-hidden="true"></div>
+
+<header>
+  <a class="sig" href="#inicio" data-t="firma">daniel higueras alba</a>
+  <nav aria-label="Secciones">
+    <a href="#portfolio">Portfolio</a>
+    <a href="#bio">Bio</a>
+    <a href="#contacto">Contacto</a>
+    <a href="#redes">Redes</a>
+  </nav>
+</header>
+
+<div class="hud bl"><span class="rec"></span>rec · <span data-t="hud.lugar">madrid</span></div>
+<div class="hud br"><span id="tc">00:00:00:00</span><br><span data-t="hud.formato">25 fps · 2.39:1</span></div>
+
+<main>
+  <section class="view" id="inicio" data-view="inicio">
+    <p class="kicker" data-t="inicio.kicker">Director · realizador · videógrafo</p>
+    <h1 data-t="inicio.titular">sigo aquí.</h1>
+    <div>
+      <p class="lede" data-t="inicio.entradilla">Documental, videoclip y publicidad en Madrid.</p>
+      <div class="credits" id="destacados" hidden></div>
+      <a class="cta" href="#portfolio" data-t="inicio.boton">Ver portfolio →</a>
+    </div>
+  </section>
+
+  <section class="view" id="portfolio" data-view="portfolio" hidden>
+    <div class="col">
+      <p class="kicker" data-t="portfolio.kicker">Portfolio</p>
+      <h2 data-t="portfolio.titulo">lo que he rodado</h2>
+      <div class="filters" id="filtros" role="group" aria-label="Filtrar por tipo"></div>
+      <ul class="works" id="trabajos"></ul>
+    </div>
+    <p class="foot" data-t="portfolio.pie"></p>
+  </section>
+
+  <section class="view" id="bio" data-view="bio" hidden>
+    <div class="col right bio">
+      <p class="kicker" data-t="bio.kicker">Bio</p>
+      <h2 data-t="bio.titulo">bio</h2>
+      <div id="bio-texto" style="margin-top:28px"></div>
+      <dl class="facts" id="bio-datos"></dl>
+    </div>
+  </section>
+
+  <section class="view" id="contacto" data-view="contacto" hidden>
+    <div class="shout">
+      <p class="kicker" data-t="contacto.kicker">Contacto · clientes y productoras</p>
+      <h1 data-t="contacto.titulo">cuéntamelo.</h1>
+      <a class="down" href="#escribe" data-scroll>Escríbeme <span aria-hidden="true">↓</span></a>
+    </div>
+    <div class="sheet" id="escribe">
+     <div class="col">
+      <p class="lede" style="margin-top:0" data-t="contacto.entradilla"></p>
+      <form id="f" novalidate>
+        <div class="field"><label for="c-nombre">Nombre</label><input id="c-nombre" name="nombre" autocomplete="name" maxlength="110" required></div>
+        <div class="field"><label for="c-email">Email</label><input id="c-email" name="email" type="email" autocomplete="email" maxlength="190" required></div>
+        <div class="field"><label for="c-tipo">Tipo de proyecto</label><select id="c-tipo" name="tipo"></select></div>
+        <div class="field"><label for="c-fecha">Fecha de rodaje aproximada</label><input id="c-fecha" name="fecha" type="month"></div>
+        <div class="field full"><label for="c-presu">Presupuesto orientativo</label><select id="c-presu" name="presupuesto"></select></div>
+        <div class="field full"><label for="c-msg">Mensaje</label><textarea id="c-msg" name="mensaje" maxlength="4900" required></textarea></div>
+        <div class="hp" aria-hidden="true"><label for="c-web">No rellenar</label><input id="c-web" name="web" tabindex="-1" autocomplete="off"></div>
+        <button class="cta" type="submit" id="c-enviar">Enviar propuesta →</button>
+        <p class="sent" id="sent" role="status" hidden></p>
+      </form>
+      <div class="direct">
+        <div id="d-email"><span>Email</span><button class="copy" type="button"></button></div>
+        <div id="d-tel"><span>Teléfono</span><button class="copy" type="button"></button></div>
+      </div>
+     </div>
+    </div>
+  </section>
+
+  <section class="view" id="redes" data-view="redes" hidden>
+    <p class="kicker" data-t="redes.kicker">Redes sociales</p>
+    <h2 data-t="redes.titulo">detrás de la cámara</h2>
+    <ul class="socials" id="redes-lista"></ul>
+  </section>
+</main>
+
+<div class="player" id="player" hidden role="dialog" aria-modal="true" aria-label="Reproductor">
+  <button class="x" type="button" id="player-x">Cerrar ✕</button>
+  <video id="player-v" controls playsinline preload="metadata"></video>
+  <div class="cap"><b id="player-t"></b><span id="player-m"></span><p id="player-d"></p></div>
+</div>
+
+<script src="/js/efectos.js"></script>
+<script type="module" src="/js/site.js"></script>
+</body>
+</html>

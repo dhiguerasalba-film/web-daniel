@@ -1,0 +1,10 @@
+{
+  "name": "web-daniel-higueras",
+  "private": true,
+  "type": "module",
+  "description": "Web de Daniel Higueras Alba: web pública, panel y zona privada",
+  "dependencies": {
+    "cloudinary": "^2.5.1",
+    "firebase-admin": "^12.7.0"
+  }
+}

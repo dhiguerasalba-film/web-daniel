@@ -1,0 +1,24 @@
+[build]
+  publish = "."
+  command = "echo 'Sin compilación: sitio estático + funciones'"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# El panel y la zona privada no deben salir en Google
+[[headers]]
+  for = "/panel/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/privado/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"

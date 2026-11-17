@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel · Daniel Higueras Alba</title>
+<meta name="theme-color" content="#101010">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/panel/panel.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="login" hidden>
+  <form class="login-box" id="f-login" novalidate>
+    <p class="eyebrow">Panel de la web</p>
+    <h1>daniel higueras alba</h1>
+    <label for="l-email">Email</label>
+    <input id="l-email" type="email" autocomplete="username" required>
+    <label for="l-pass">Contraseña</label>
+    <input id="l-pass" type="password" autocomplete="current-password" required>
+    <button class="btn primary" type="submit">Entrar</button>
+    <button class="link" type="button" id="l-olvido">He olvidado la contraseña</button>
+    <p class="note" id="l-msg" role="status" hidden></p>
+  </form>
+</div>
+
+<!-- APP -->
+<div class="app" id="app" hidden>
+  <aside class="side">
+    <div class="brand">daniel higueras alba<span>panel</span></div>
+    <nav id="menu">
+      <p class="grp">Web</p>
+      <a href="#portada">Portada</a>
+      <a href="#portfolio">Portfolio</a>
+      <a href="#bio">Bio</a>
+      <a href="#contacto">Contacto</a>
+      <a href="#redes">Redes sociales</a>
+      <a href="#fondos">Fotos de fondo</a>
+      <p class="grp">Privado</p>
+      <a href="#videos">Vídeos privados</a>
+      <a href="#codigos">Códigos de acceso</a>
+      <a href="#invitaciones">Invitaciones por email</a>
+      <p class="grp">Clientes</p>
+      <a href="#mensajes">Mensajes <b class="badge" id="badge" hidden></b></a>
+    </nav>
+    <div class="side-foot">
+      <a href="/" target="_blank" rel="noopener">Ver la web ↗</a>
+      <button class="link" type="button" id="salir">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <section data-sec="portada">
+      <header class="sec-h"><h2>Portada</h2><p>Lo primero que se ve al entrar en la web.</p></header>
+      <div class="card" id="vacio" hidden>
+        <p>La web todavía no tiene contenido guardado. Puedes empezar desde el contenido de la maqueta y cambiarlo después.</p>
+        <button class="btn" type="button" id="sembrar">Cargar contenido de ejemplo</button>
+      </div>
+      <div class="card grid2">
+        <div class="f"><label for="p-firma">Nombre en la cabecera</label><input id="p-firma" data-path="firma"></div>
+        <div class="f"><label for="p-nombre">Nombre completo (pestaña del navegador)</label><input id="p-nombre" data-path="nombre"></div>
+        <div class="f full"><label for="p-kicker">Línea pequeña sobre el titular</label><input id="p-kicker" data-path="inicio.kicker"></div>
+        <div class="f full"><label for="p-titular">Titular grande</label><input id="p-titular" data-path="inicio.titular"></div>
+        <div class="f full"><label for="p-entradilla">Entradilla</label><textarea id="p-entradilla" data-path="inicio.entradilla" rows="3"></textarea></div>
+        <div class="f"><label for="p-boton">Texto del botón</label><input id="p-boton" data-path="inicio.boton"></div>
+        <div class="f"><label for="p-lugar">Texto junto al piloto REC</label><input id="p-lugar" data-path="hud.lugar"></div>
+        <div class="f"><label for="p-formato">Texto bajo el código de tiempo</label><input id="p-formato" data-path="hud.formato"></div>
+      </div>
+      <p class="hint">Los trabajos que marques como «Destacado» en Portfolio salen en la portada (los tres primeros).</p>
+      <div class="bar"><button class="btn primary" type="button" data-save>Guardar portada</button></div>
+    </section>
+
+    <section data-sec="portfolio" hidden>
+      <header class="sec-h"><h2>Portfolio</h2><p>Trabajos públicos. Ordénalos con las flechas; los ocultos no salen en la web.</p></header>
+      <div class="card grid2">
+        <div class="f"><label for="pf-kicker">Línea pequeña</label><input id="pf-kicker" data-path="portfolio.kicker"></div>
+        <div class="f"><label for="pf-titulo">Título de la sección</label><input id="pf-titulo" data-path="portfolio.titulo"></div>
+        <div class="f full"><label for="pf-pie">Texto al pie</label><input id="pf-pie" data-path="portfolio.pie"></div>
+      </div>
+      <div class="bar"><button class="btn" type="button" data-save>Guardar textos</button><button class="btn primary" type="button" id="w-nuevo">+ Nuevo trabajo</button></div>
+      <div class="card flush"><ul class="rows" id="w-lista"></ul></div>
+
+      <div class="card" id="w-editor" hidden>
+        <h3 id="w-ed-t">Nuevo trabajo</h3>
+        <div class="grid2">
+          <div class="f full"><label for="w-titulo">Título</label><input id="w-titulo"></div>
+          <div class="f"><label for="w-categoria">Tipo</label><input id="w-categoria" list="w-cats" placeholder="Documental, Videoclip…"><datalist id="w-cats"></datalist></div>
+          <div class="f"><label for="w-duracion">Duración</label><input id="w-duracion" placeholder="03:48"></div>
+          <div class="f"><label for="w-rol">Tu papel</label><input id="w-rol" placeholder="Dirección y cámara"></div>
+          <div class="f"><label for="w-cliente">Cliente o sello</label><input id="w-cliente"></div>
+          <div class="f"><label for="w-anio">Año</label><input id="w-anio" inputmode="numeric" maxlength="4"></div>
+          <div class="f"><label for="w-enlace">Enlace externo (Vimeo, YouTube…) si no subes el vídeo</label><input id="w-enlace" type="url" placeholder="https://"></div>
+          <div class="f full"><label for="w-descripcion">Descripción (sale bajo el vídeo)</label><textarea id="w-descripcion" rows="3"></textarea></div>
+
+          <div class="f full media">
+            <label>Vídeo</label>
+            <div class="media-row">
+              <video id="w-video-prev" muted playsinline preload="metadata" hidden></video>
+              <div>
+                <input type="file" id="w-video-file" accept="video/*" class="file">
+                <label for="w-video-file" class="btn">Subir vídeo</label>
+                <button class="link danger" type="button" id="w-video-quitar" hidden>Quitar vídeo</button>
+                <div class="prog" id="w-video-prog" hidden><i></i><span></span></div>
+                <p class="hint">Hasta 100 MB con la cuenta gratuita de Cloudinary. Para piezas más largas, usa el enlace externo.</p>
+              </div>
+            </div>
+          </div>
+          <div class="f full media">
+            <label>Imagen de portada (opcional)</label>
+            <div class="media-row">
+              <img id="w-poster-prev" alt="" hidden>
+              <div>
+                <input type="file" id="w-poster-file" accept="image/*" class="file">
+                <label for="w-poster-file" class="btn">Subir imagen</label>
+                <div class="prog" id="w-poster-prog" hidden><i></i><span></span></div>
+                <p class="hint">Si no subes ninguna, se usa un fotograma del vídeo.</p>
+              </div>
+            </div>
+          </div>
+          <label class="check"><input type="checkbox" id="w-visible" checked> Visible en la web</label>
+          <label class="check"><input type="checkbox" id="w-destacado"> Destacado en portada</label>
+        </div>
+        <div class="bar">
+          <button class="btn primary" type="button" id="w-guardar">Guardar trabajo</button>
+          <button class="btn" type="button" id="w-cancelar">Cancelar</button>
+          <button class="link danger" type="button" id="w-borrar" hidden>Borrar trabajo</button>
+        </div>
+      </div>
+    </section>
+
+    <section data-sec="bio" hidden>
+      <header class="sec-h"><h2>Bio</h2><p>Cada párrafo es un bloque. El primero sale un poco más grande.</p></header>
+      <div class="card grid2">
+        <div class="f"><label for="b-kicker">Línea pequeña</label><input id="b-kicker" data-path="bio.kicker"></div>
+        <div class="f"><label for="b-titulo">Título</label><input id="b-titulo" data-path="bio.titulo"></div>
+      </div>
+      <div class="card"><h3>Párrafos</h3><div class="rep" data-path="bio.parrafos" data-kind="textarea" data-add="Añadir párrafo"></div></div>
+      <div class="card"><h3>Datos rápidos</h3><div class="rep" data-path="bio.datos" data-kind="etiqueta:Etiqueta|valor:Texto" data-add="Añadir dato"></div></div>
+      <div class="bar"><button class="btn primary" type="button" data-save>Guardar bio</button></div>
+    </section>
+
+    <section data-sec="contacto" hidden>
+      <header class="sec-h"><h2>Contacto</h2><p>Textos del formulario y tus datos de contacto. Deja el teléfono vacío para no mostrarlo.</p></header>
+      <div class="card grid2">
+        <div class="f"><label for="c-kicker">Línea pequeña</label><input id="c-kicker" data-path="contacto.kicker"></div>
+        <div class="f"><label for="c-titulo">Titular grande</label><input id="c-titulo" data-path="contacto.titulo"></div>
+        <div class="f full"><label for="c-entradilla">Texto sobre el formulario</label><textarea id="c-entradilla" data-path="contacto.entradilla" rows="2"></textarea></div>
+        <div class="f"><label for="c-email">Email público</label><input id="c-email" type="email" data-path="contacto.email"></div>
+        <div class="f"><label for="c-tel">Teléfono público</label><input id="c-tel" type="tel" data-path="contacto.telefono"></div>
+        <div class="f full"><label for="c-gracias">Mensaje tras enviar el formulario</label><input id="c-gracias" data-path="contacto.gracias"></div>
+      </div>
+      <div class="card grid2">
+        <div><h3>Tipos de proyecto</h3><div class="rep" data-path="contacto.tipos" data-kind="text" data-add="Añadir tipo"></div></div>
+        <div><h3>Presupuestos</h3><div class="rep" data-path="contacto.presupuestos" data-kind="text" data-add="Añadir rango"></div></div>
+      </div>
+      <div class="bar"><button class="btn primary" type="button" data-save>Guardar contacto</button></div>
+    </section>
+
+    <section data-sec="redes" hidden>
+      <header class="sec-h"><h2>Redes sociales</h2><p>Se muestran en el orden de la lista.</p></header>
+      <div class="card grid2">
+        <div class="f"><label for="r-kicker">Línea pequeña</label><input id="r-kicker" data-path="redes.kicker"></div>
+        <div class="f"><label for="r-titulo">Título</label><input id="r-titulo" data-path="redes.titulo"></div>
+      </div>
+      <div class="card"><div class="rep" data-path="redes.lista" data-kind="nombre:Red (instagram, vimeo…)|usuario:Usuario que se ve|url:Enlace completo" data-add="Añadir red"></div></div>
+      <div class="bar"><button class="btn primary" type="button" data-save>Guardar redes</button></div>
+    </section>
+
+    <section data-sec="fondos" hidden>
+      <header class="sec-h"><h2>Fotos de fondo</h2><p>Una foto vertical por sección, en blanco y negro funciona mejor. Se guarda al subirla.</p></header>
+      <div class="fondos" id="fondos"></div>
+    </section>
+
+    <section data-sec="videos" hidden>
+      <header class="sec-h"><h2>Vídeos privados</h2><p>No salen en la web. Solo los ve quien tenga un código o una invitación con ese vídeo.</p></header>
+      <div class="card grid2">
+        <div class="f"><label for="v-titulo">Título</label><input id="v-titulo"></div>
+        <div class="f"><label for="v-duracion">Duración</label><input id="v-duracion" placeholder="04:12"></div>
+        <div class="f full"><label for="v-desc">Descripción o notas para el cliente</label><textarea id="v-desc" rows="2"></textarea></div>
+        <div class="f full">
+          <input type="file" id="v-file" accept="video/*" class="file">
+          <label for="v-file" class="btn primary">Elegir vídeo y subir</label>
+          <div class="prog" id="v-prog" hidden><i></i><span></span></div>
+          <p class="hint">Se sube protegido: sin acceso, el enlace directo no funciona.</p>
+        </div>
+      </div>
+      <div class="card flush"><ul class="rows" id="v-lista"></ul></div>
+    </section>
+
+    <section data-sec="codigos" hidden>
+      <header class="sec-h"><h2>Códigos de acceso</h2><p>Para pasar por WhatsApp o email. Quien tenga el enlace entra sin registrarse.</p></header>
+      <div class="card grid2">
+        <div class="f"><label for="k-nombre">Para quién</label><input id="k-nombre" placeholder="Productora Lumbre"></div>
+        <div class="f"><label for="k-caduca">Caduca el (opcional)</label><input id="k-caduca" type="date"></div>
+        <div class="f full"><label>Vídeos que verá</label><div class="checks" id="k-videos"></div></div>
+      </div>
+      <div class="bar"><button class="btn primary" type="button" id="k-crear">Crear código</button></div>
+      <div class="card flush"><ul class="rows" id="k-lista"></ul></div>
+    </section>
+
+    <section data-sec="invitaciones" hidden>
+      <header class="sec-h"><h2>Invitaciones por email</h2><p>La persona recibe un enlace para entrar con su email. Útil para clientes que vuelven.</p></header>
+      <div class="card grid2">
+        <div class="f"><label for="i-email">Email</label><input id="i-email" type="email"></div>
+        <div class="f"><label for="i-nombre">Nombre</label><input id="i-nombre"></div>
+        <div class="f full"><label>Vídeos que verá</label><div class="checks" id="i-videos"></div></div>
+      </div>
+      <div class="bar"><button class="btn primary" type="button" id="i-crear">Guardar y enviar invitación</button></div>
+      <div class="card flush"><ul class="rows" id="i-lista"></ul></div>
+    </section>
+
+    <section data-sec="mensajes" hidden>
+      <header class="sec-h"><h2>Mensajes</h2><p>Lo que llega desde el formulario de contacto.</p></header>
+      <div class="card flush"><ul class="rows msgs" id="m-lista"></ul></div>
+    </section>
+  </main>
+</div>
+
+<dialog id="dlg"><video id="dlg-v" controls playsinline></video><form method="dialog"><button class="btn">Cerrar</button></form></dialog>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script type="module" src="/js/panel.js"></script>
+</body>
+</html>
