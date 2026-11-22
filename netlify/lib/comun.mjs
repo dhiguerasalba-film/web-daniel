@@ -6,6 +6,7 @@ import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import { v2 as cloudinary } from "cloudinary";
+import { leerVideo } from "../../js/video.js";
 
 if(!getApps().length){
   initializeApp({ credential: cert({
@@ -64,6 +65,11 @@ export function manejar(fn){
 
 // Enlaces firmados de un vídeo protegido. Sin la clave secreta nadie puede generarlos.
 export function enlacesPrivados(v){
+  // vídeo privado guardado como enlace de YouTube o Vimeo
+  if(v.enlace){
+    const inc = leerVideo(v.enlace);
+    return inc ? { embed: inc.embed, poster: inc.poster } : { embed: "", poster: "" };
+  }
   const base = { resource_type: "video", type: "authenticated", sign_url: true, secure: true };
   return {
     url: cloudinary.url(v.publicId, { ...base, format: v.formato || "mp4" }),

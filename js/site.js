@@ -2,6 +2,11 @@
 // configurado todavía o no responde, se queda con el contenido de partida.
 import { db, configurado, mezclar, cld } from "./firebase.js";
 import { CONFIG_INICIAL, TRABAJOS_INICIALES } from "./contenido-inicial.js";
+import { leerVideo, conAutoplay } from "./video.js";
+
+// Formspree: pega aquí el código del formulario (lo que va después de formspree.io/f/)
+// para que cada mensaje llegue también por email. Vacío = solo se guarda en el panel.
+const FORMSPREE_ID = "";
 
 const $ = s => document.querySelector(s);
 const el = (tag, attrs = {}, ...kids) => {
@@ -48,7 +53,7 @@ function pintar(){
     const b = el("button", { class: "w", type: "button" },
       el("span", { class: "t", text: w.titulo }),
       el("span", { class: "d", text: w.duracion || "" }),
-      el("span", { class: "m" }, meta, (!w.videoUrl && w.enlace) ? el("span", { class: "ext", text: "↗" }) : null));
+      el("span", { class: "m" }, meta, (!w.videoUrl && w.enlace && !leerVideo(w.enlace)) ? el("span", { class: "ext", text: "↗" }) : null));
     b.addEventListener("click", () => abrir(w));
     lista.append(el("li", { "data-k": (w.categoria || "").toLowerCase() }, b));
   });
@@ -92,17 +97,29 @@ function pintar(){
 }
 function n_hidden(sel, h){ const n = $(sel); if(n) n.hidden = h; }
 
-// reproductor
-const pl = $("#player"), pv = $("#player-v");
+// reproductor: vídeo subido a Cloudinary, o YouTube / Vimeo incrustado
+const pl = $("#player"), pv = $("#player-v"), pf = $("#player-f");
 function abrir(w){
-  if(!w.videoUrl){ if(w.enlace) window.open(w.enlace, "_blank", "noopener"); else location.hash = "contacto"; return; }
-  pv.src = w.videoUrl; pv.poster = cld(w.posterUrl, 1600);
+  const inc = !w.videoUrl ? leerVideo(w.enlace) : null;
+  if(!w.videoUrl && !inc){ if(w.enlace) window.open(w.enlace, "_blank", "noopener"); else location.hash = "contacto"; return; }
   $("#player-t").textContent = w.titulo;
   $("#player-m").textContent = [w.categoria, w.rol, w.anio, w.duracion].filter(Boolean).join(" · ");
   $("#player-d").textContent = w.descripcion || "";
-  pl.hidden = false; $("#player-x").focus(); pv.play().catch(() => {});
+  if(inc){
+    pv.hidden = true; pf.hidden = false;
+    const f = document.createElement("iframe");
+    f.src = conAutoplay(inc.embed); f.title = w.titulo || "Vídeo";
+    f.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media";
+    f.allowFullscreen = true; f.referrerPolicy = "strict-origin-when-cross-origin";
+    pf.replaceChildren(f);
+  } else {
+    pf.hidden = true; pf.replaceChildren(); pv.hidden = false;
+    pv.src = w.videoUrl; pv.poster = cld(w.posterUrl, 1600);
+  }
+  pl.hidden = false; $("#player-x").focus();
+  if(!inc) pv.play().catch(() => {});
 }
-function cerrar(){ pv.pause(); pv.removeAttribute("src"); pv.load(); pl.hidden = true; }
+function cerrar(){ pv.pause(); pv.removeAttribute("src"); pv.load(); pf.replaceChildren(); pl.hidden = true; }
 $("#player-x").addEventListener("click", cerrar);
 document.addEventListener("keydown", e => { if(e.key === "Escape" && !pl.hidden) cerrar(); });
 
@@ -122,6 +139,15 @@ $("#f").addEventListener("submit", async e => {
       nombre: f.nombre.value.trim(), email: f.email.value.trim(), tipo: f.tipo.value, fecha: f.fecha.value || "",
       presupuesto: f.presupuesto.value, mensaje: f.mensaje.value.trim(), leido: false, createdAt: serverTimestamp()
     });
+    if(FORMSPREE_ID){
+      // copia por email; si falla, el mensaje ya está guardado en el panel
+      fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+        method: "POST", headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({ nombre: f.nombre.value.trim(), email: f.email.value.trim(), _replyto: f.email.value.trim(),
+          _subject: `Web · ${f.tipo.value} · ${f.nombre.value.trim()}`, tipo: f.tipo.value, fecha: f.fecha.value || "",
+          presupuesto: f.presupuesto.value, mensaje: f.mensaje.value.trim() })
+      }).catch(err => console.warn("Formspree:", err));
+    }
     f.reset(); avisar(cfg.contacto.gracias);
   }catch(err){
     console.error(err);

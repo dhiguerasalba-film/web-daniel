@@ -1,6 +1,7 @@
 // Panel de Daniel: edita la web, sube medios a Cloudinary y gestiona la zona privada.
 import { db, auth, configurado, mezclar, cld } from "./firebase.js";
 import { CONFIG_INICIAL, TRABAJOS_INICIALES } from "./contenido-inicial.js";
+import { leerVideo } from "./video.js";
 import {
   signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendSignInLinkToEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -198,7 +199,7 @@ async function cargarTrabajos(){
   trabajos.forEach((w, i) => l.append(el("li", {},
     el("div", {}, el("div", { class: "t" }, w.titulo || "Sin título",
         w.visible ? null : el("span", { class: "pill off", text: "oculto" }), w.destacado ? el("span", { class: "pill on", text: "destacado" }) : null),
-      el("div", { class: "s", text: [w.categoria, w.anio, w.duracion, w.videoUrl ? "vídeo subido" : w.enlace ? "enlace externo" : "sin vídeo"].filter(Boolean).join(" · ") })),
+      el("div", { class: "s", text: [w.categoria, w.anio, w.duracion, w.videoUrl ? "vídeo subido" : leerVideo(w.enlace) ? (leerVideo(w.enlace).tipo === "vimeo" ? "Vimeo" : "YouTube") : w.enlace ? "enlace externo" : "sin vídeo"].filter(Boolean).join(" · ") })),
     el("div", { class: "acts" },
       el("button", { class: "btn small", type: "button", text: "↑", "aria-label": "Subir", disabled: i === 0, onclick: () => mover(i, -1) }),
       el("button", { class: "btn small", type: "button", text: "↓", "aria-label": "Bajar", disabled: i === trabajos.length - 1, onclick: () => mover(i, 1) }),
@@ -219,14 +220,22 @@ function editar(w){
   $("#w-destacado").checked = !!w?.destacado;
   $("#w-ed-t").textContent = w ? "Editar trabajo" : "Nuevo trabajo";
   $("#w-borrar").hidden = !w;
-  pintarMedios();
+  avisoEnlace();
   $("#w-editor").hidden = false; $("#w-editor").scrollIntoView({ behavior: "smooth", block: "start" }); $("#w-titulo").focus({ preventScroll: true });
 }
+function avisoEnlace(){
+  const t = $("#w-enlace").value.trim(), n = $("#w-enlace-ok"), inc = leerVideo(t);
+  n.className = "hint " + (t ? (inc ? "ok" : "err") : "");
+  n.textContent = !t ? "" : inc ? `Vídeo de ${inc.tipo === "vimeo" ? "Vimeo" : "YouTube"} reconocido: se verá dentro de la web.` : "No es un enlace de YouTube ni de Vimeo: al pulsar el trabajo se abrirá en otra pestaña.";
+  pintarMedios();
+}
+$("#w-enlace").addEventListener("input", avisoEnlace);
 function pintarMedios(){
   const v = $("#w-video-prev"), p = $("#w-poster-prev");
+  const inc = !borrador.videoUrl ? leerVideo($("#w-enlace").value) : null;
   v.hidden = !borrador.videoUrl; if(borrador.videoUrl) v.src = borrador.videoUrl; else v.removeAttribute("src");
   $("#w-video-quitar").hidden = !borrador.videoUrl;
-  const poster = borrador.posterUrl || posterDeVideo(borrador.videoUrl);
+  const poster = borrador.posterUrl || posterDeVideo(borrador.videoUrl) || (inc && inc.poster) || "";
   p.hidden = !poster; if(poster) p.src = cld(poster, 500);
 }
 $("#w-nuevo").addEventListener("click", () => editar(null));
@@ -244,7 +253,8 @@ $("#w-poster-file").addEventListener("change", async e => {
 $("#w-video-quitar").addEventListener("click", () => { borrador.videoUrl = ""; borrador.videoPublicId = ""; pintarMedios(); });
 $("#w-guardar").addEventListener("click", e => ocupado(e.target, async () => {
   const datos = { visible: $("#w-visible").checked, destacado: $("#w-destacado").checked,
-    videoUrl: borrador.videoUrl, videoPublicId: borrador.videoPublicId, posterUrl: borrador.posterUrl || posterDeVideo(borrador.videoUrl) };
+    videoUrl: borrador.videoUrl, videoPublicId: borrador.videoPublicId,
+    posterUrl: borrador.posterUrl || posterDeVideo(borrador.videoUrl) || (leerVideo($("#w-enlace").value)?.poster || "") };
   W.forEach(k => datos[k] = $(`#w-${k}`).value.trim());
   if(!datos.titulo) throw new Error("Ponle un título al trabajo.");
   if(editando) await updateDoc(doc(db, "works", editando), datos);
@@ -269,14 +279,22 @@ async function cargarPrivados(){
   if(!privados.length) l.append(el("li", {}, el("span", { class: "empty", text: "No hay vídeos privados todavía." })));
   privados.forEach(v => l.append(el("li", {},
     el("div", {}, el("div", { class: "t", text: v.titulo || "Sin título" }),
-      el("div", { class: "s", text: [v.duracion, v.bytes ? `${(v.bytes / 1048576).toFixed(0)} MB` : "", `subido ${fecha(v.createdAt)}`].filter(Boolean).join(" · ") })),
+      el("div", { class: "s", text: [v.enlace ? (leerVideo(v.enlace)?.tipo === "vimeo" ? "Vimeo" : "YouTube") : "Cloudinary", v.duracion, v.bytes ? `${(v.bytes / 1048576).toFixed(0)} MB` : "", `subido ${fecha(v.createdAt)}`].filter(Boolean).join(" · ") })),
     el("div", { class: "acts" },
-      el("button", { class: "btn small", type: "button", text: "Ver", onclick: e => ocupado(e.target, async () => { const r = await api("admin-medios", { accion: "ver", videoId: v.id }); $("#dlg-v").src = r.url; $("#dlg-v").poster = r.poster; $("#dlg").showModal(); }) }),
+      el("button", { class: "btn small", type: "button", text: "Ver", onclick: e => ocupado(e.target, async () => {
+        const r = await api("admin-medios", { accion: "ver", videoId: v.id });
+        const dv = $("#dlg-v"), df = $("#dlg-f");
+        if(r.embed){
+          dv.hidden = true; df.hidden = false;
+          const f = document.createElement("iframe"); f.src = r.embed; f.allow = "fullscreen; picture-in-picture; encrypted-media";
+          f.allowFullscreen = true; f.referrerPolicy = "strict-origin-when-cross-origin"; df.replaceChildren(f);
+        } else { df.hidden = true; df.replaceChildren(); dv.hidden = false; dv.src = r.url; dv.poster = r.poster; }
+        $("#dlg").showModal(); }) }),
       el("button", { class: "btn small", type: "button", text: "Renombrar", onclick: async () => {
         const t = prompt("Título del vídeo", v.titulo || ""); if(t === null) return;
         const d = prompt("Descripción o notas", v.descripcion || ""); if(d === null) return;
         await updateDoc(doc(db, "privateVideos", v.id), { titulo: t.trim(), descripcion: d.trim() }); await cargarPrivados(); } }),
-      el("button", { class: "btn small", type: "button", text: "Renovar enlace", title: "Los enlaces que ya se vieron dejan de funcionar", onclick: e => ocupado(e.target, async () => {
+      v.enlace ? null : el("button", { class: "btn small", type: "button", text: "Renovar enlace", title: "Los enlaces que ya se vieron dejan de funcionar", onclick: e => ocupado(e.target, async () => {
         if(!confirm("Se generará un enlace nuevo y el antiguo dejará de funcionar, por si alguien lo ha copiado. Los accesos que tengan el vídeo asignado lo seguirán viendo. ¿Seguir?")) return;
         await api("admin-medios", { accion: "renovar", videoId: v.id }); toast("Enlace renovado."); }) }),
       el("button", { class: "btn small", type: "button", text: "Borrar", onclick: e => ocupado(e.target, async () => {
@@ -284,7 +302,17 @@ async function cargarPrivados(){
         await api("admin-medios", { accion: "borrar-privado", videoId: v.id }); await recargarPrivado(); toast("Vídeo borrado."); }) })))));
   pintarChecks("#k-videos"); pintarChecks("#i-videos");
 }
-$("#dlg").addEventListener("close", () => { const v = $("#dlg-v"); v.pause(); v.removeAttribute("src"); v.load(); });
+$("#dlg").addEventListener("close", () => { const v = $("#dlg-v"); v.pause(); v.removeAttribute("src"); v.load(); $("#dlg-f").replaceChildren(); });
+$("#v-enlace-add").addEventListener("click", e => ocupado(e.target, async () => {
+  const url = $("#v-enlace").value.trim(), inc = leerVideo(url);
+  if(!inc) throw new Error("Pega un enlace de Vimeo o de YouTube.");
+  const titulo = $("#v-titulo").value.trim();
+  if(!titulo) throw new Error("Ponle un título al vídeo.");
+  await addDoc(collection(db, "privateVideos"), { titulo, descripcion: $("#v-desc").value.trim(), duracion: $("#v-duracion").value.trim(),
+    enlace: inc.enlace, plataforma: inc.tipo, createdAt: serverTimestamp() });
+  ["#v-titulo", "#v-desc", "#v-duracion", "#v-enlace"].forEach(x => $(x).value = "");
+  await cargarPrivados(); toast("Vídeo añadido. Ahora asígnalo a un código o una invitación.");
+}));
 $("#v-file").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = ""; if(!f) return;
   const titulo = $("#v-titulo").value.trim() || f.name.replace(/\.[^.]+$/, "");

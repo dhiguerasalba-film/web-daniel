@@ -94,7 +94,7 @@
           <div class="f"><label for="w-rol">Tu papel</label><input id="w-rol" placeholder="Dirección y cámara"></div>
           <div class="f"><label for="w-cliente">Cliente o sello</label><input id="w-cliente"></div>
           <div class="f"><label for="w-anio">Año</label><input id="w-anio" inputmode="numeric" maxlength="4"></div>
-          <div class="f"><label for="w-enlace">Enlace externo (Vimeo, YouTube…) si no subes el vídeo</label><input id="w-enlace" type="url" placeholder="https://"></div>
+          <div class="f"><label for="w-enlace">Enlace de YouTube o Vimeo</label><input id="w-enlace" type="url" placeholder="https://vimeo.com/… o https://youtu.be/…"><span class="hint" id="w-enlace-ok"></span></div>
           <div class="f full"><label for="w-descripcion">Descripción (sale bajo el vídeo)</label><textarea id="w-descripcion" rows="3"></textarea></div>
 
           <div class="f full media">
@@ -106,7 +106,7 @@
                 <label for="w-video-file" class="btn">Subir vídeo</label>
                 <button class="link danger" type="button" id="w-video-quitar" hidden>Quitar vídeo</button>
                 <div class="prog" id="w-video-prog" hidden><i></i><span></span></div>
-                <p class="hint">Hasta 100 MB con la cuenta gratuita de Cloudinary. Para piezas más largas, usa el enlace externo.</p>
+                <p class="hint">Solo para vídeos cortos: hasta 100 MB con la cuenta gratuita de Cloudinary. Para piezas largas, pega arriba el enlace de YouTube o Vimeo.</p>
               </div>
             </div>
           </div>
@@ -183,10 +183,16 @@
         <div class="f"><label for="v-duracion">Duración</label><input id="v-duracion" placeholder="04:12"></div>
         <div class="f full"><label for="v-desc">Descripción o notas para el cliente</label><textarea id="v-desc" rows="2"></textarea></div>
         <div class="f full">
-          <input type="file" id="v-file" accept="video/*" class="file">
-          <label for="v-file" class="btn primary">Elegir vídeo y subir</label>
+          <label for="v-enlace">Enlace de Vimeo o YouTube</label>
+          <div class="bar"><input id="v-enlace" type="url" placeholder="https://vimeo.com/123456789/abcdef" style="flex:1;min-width:220px"><button class="btn primary" type="button" id="v-enlace-add">Añadir vídeo</button></div>
+          <p class="hint">Para vídeos pesados. En Vimeo, ponlo «Oculto de Vimeo» y permite incrustarlo solo en tu dominio. En YouTube, ponlo «Oculto» (no «Privado»: los privados no se pueden ver en la web).</p>
+        </div>
+        <div class="f full">
+          <label>O sube un archivo corto (hasta 100 MB)</label>
+          <div><input type="file" id="v-file" accept="video/*" class="file">
+          <label for="v-file" class="btn">Elegir vídeo y subir</label></div>
           <div class="prog" id="v-prog" hidden><i></i><span></span></div>
-          <p class="hint">Se sube protegido: sin acceso, el enlace directo no funciona.</p>
+          <p class="hint">Se sube protegido a tu Cloudinary: sin acceso, el enlace directo no funciona.</p>
         </div>
       </div>
       <div class="card flush"><ul class="rows" id="v-lista"></ul></div>
@@ -221,7 +227,7 @@
   </main>
 </div>
 
-<dialog id="dlg"><video id="dlg-v" controls playsinline></video><form method="dialog"><button class="btn">Cerrar</button></form></dialog>
+<dialog id="dlg"><video id="dlg-v" controls playsinline></video><div class="frame" id="dlg-f" hidden></div><form method="dialog"><button class="btn">Cerrar</button></form></dialog>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script type="module" src="/js/panel.js"></script>

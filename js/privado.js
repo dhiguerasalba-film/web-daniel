@@ -27,9 +27,20 @@ function sala({ titular, videos }){
   if(!videos.length){ g.innerHTML = '<p class="msg">Todavía no hay vídeos asignados a este acceso.</p>'; return; }
   for(const v of videos){
     const card = document.createElement("article"); card.className = "card";
-    const vid = document.createElement("video");
-    Object.assign(vid, { controls: true, playsInline: true, preload: "metadata", poster: v.poster, src: v.url });
-    vid.setAttribute("controlslist", "nodownload"); vid.addEventListener("contextmenu", e => e.preventDefault());
+    let vid;
+    if(v.embed){
+      // YouTube o Vimeo incrustado
+      vid = document.createElement("div"); vid.className = "frame";
+      const f = document.createElement("iframe");
+      f.src = v.embed; f.title = v.titulo || "Vídeo"; f.loading = "lazy";
+      f.allow = "fullscreen; picture-in-picture; encrypted-media"; f.allowFullscreen = true;
+      f.referrerPolicy = "strict-origin-when-cross-origin";
+      vid.append(f);
+    } else {
+      vid = document.createElement("video");
+      Object.assign(vid, { controls: true, playsInline: true, preload: "metadata", poster: v.poster, src: v.url });
+      vid.setAttribute("controlslist", "nodownload"); vid.addEventListener("contextmenu", e => e.preventDefault());
+    }
     const h = document.createElement("h3"); h.textContent = v.titulo || "Sin título";
     const m = document.createElement("div"); m.className = "m"; m.textContent = v.duracion || "";
     const p = document.createElement("p"); p.textContent = v.descripcion || ""; p.hidden = !v.descripcion;

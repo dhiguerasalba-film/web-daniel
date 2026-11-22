@@ -15,13 +15,14 @@ export default manejar(async (req, body) => {
     if(accion === "ver") return enlacesPrivados(v);
 
     if(accion === "renovar"){
+      if(!v.publicId) throw new ErrorHttp(400, "Los vídeos de YouTube o Vimeo no se renuevan desde aquí: cambia su privacidad en esa plataforma.");
       const nuevo = `${CARPETA_PRIVADA}/${codigoAleatorio(16)}`;
       await cloudinary.uploader.rename(v.publicId, nuevo, { resource_type: "video", type: "authenticated", to_type: "authenticated", invalidate: true });
       await ref.update({ publicId: nuevo, renovadoEn: new Date() });
       return { ok: true };
     }
 
-    await cloudinary.uploader.destroy(v.publicId, { resource_type: "video", type: "authenticated", invalidate: true });
+    if(v.publicId) await cloudinary.uploader.destroy(v.publicId, { resource_type: "video", type: "authenticated", invalidate: true });
     await ref.delete();
     // quitarlo de códigos e invitaciones
     for(const col of ["accessCodes", "invites"]){
