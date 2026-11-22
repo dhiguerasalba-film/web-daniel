@@ -289,7 +289,7 @@ async function cargarPrivados(){
   if(!privados.length) l.append(el("li", {}, el("span", { class: "empty", text: "No hay vídeos privados todavía." })));
   privados.forEach(v => l.append(el("li", {},
     el("div", {}, el("div", { class: "t", text: v.titulo || "Sin título" }),
-      el("div", { class: "s", text: [v.enlace ? (leerVideo(v.enlace)?.tipo === "vimeo" ? "Vimeo" : "YouTube") : "Cloudinary", v.duracion, v.bytes ? `${(v.bytes / 1048576).toFixed(0)} MB` : "", `subido ${fecha(v.createdAt)}`].filter(Boolean).join(" · ") })),
+      el("div", { class: "s", text: [v.enlace ? (leerVideo(v.enlace)?.tipo === "vimeo" ? "Vimeo" : "YouTube") : v.r2Key ? "Cloudflare" : "Cloudinary", v.duracion, v.bytes ? `${(v.bytes / 1048576).toFixed(0)} MB` : "", `subido ${fecha(v.createdAt)}`].filter(Boolean).join(" · ") })),
     el("div", { class: "acts" },
       el("button", { class: "btn small", type: "button", text: "Ver", onclick: e => ocupado(e.target, async () => {
         const r = await api("admin-medios", { accion: "ver", videoId: v.id });
@@ -304,11 +304,11 @@ async function cargarPrivados(){
         const t = prompt("Título del vídeo", v.titulo || ""); if(t === null) return;
         const d = prompt("Descripción o notas", v.descripcion || ""); if(d === null) return;
         await updateDoc(doc(db, "privateVideos", v.id), { titulo: t.trim(), descripcion: d.trim() }); await cargarPrivados(); } }),
-      v.enlace ? null : el("button", { class: "btn small", type: "button", text: "Renovar enlace", title: "Los enlaces que ya se vieron dejan de funcionar", onclick: e => ocupado(e.target, async () => {
+      (v.enlace || v.r2Key) ? null : el("button", { class: "btn small", type: "button", text: "Renovar enlace", title: "Los enlaces que ya se vieron dejan de funcionar", onclick: e => ocupado(e.target, async () => {
         if(!confirm("Se generará un enlace nuevo y el antiguo dejará de funcionar, por si alguien lo ha copiado. Los accesos que tengan el vídeo asignado lo seguirán viendo. ¿Seguir?")) return;
         await api("admin-medios", { accion: "renovar", videoId: v.id }); toast("Enlace renovado."); }) }),
       el("button", { class: "btn small", type: "button", text: "Borrar", onclick: e => ocupado(e.target, async () => {
-        if(!confirm(`¿Borrar «${v.titulo}» para siempre? Se elimina también de Cloudinary.`)) return;
+        if(!confirm(`¿Borrar «${v.titulo}» para siempre? ${v.enlace ? "En YouTube o Vimeo seguirá existiendo." : "Se elimina también el archivo."}`)) return;
         await api("admin-medios", { accion: "borrar-privado", videoId: v.id }); await recargarPrivado(); toast("Vídeo borrado."); }) })))));
   pintarChecks("#k-videos"); pintarChecks("#i-videos");
 }
@@ -323,13 +323,37 @@ $("#v-enlace-add").addEventListener("click", e => ocupado(e.target, async () => 
   ["#v-titulo", "#v-desc", "#v-duracion", "#v-enlace"].forEach(x => $(x).value = "");
   await cargarPrivados(); toast("Vídeo añadido. Ahora asígnalo a un código o una invitación.");
 }));
+// subida directa a Cloudflare R2 con barra de progreso
+function subirR2(f, destino, prog){
+  const barra = $(prog);
+  barra.hidden = false; barra.querySelector("i").style.width = "0"; barra.querySelector("span").textContent = "0 %";
+  return new Promise((ok, ko) => {
+    const x = new XMLHttpRequest();
+    x.open("PUT", destino.url);
+    x.setRequestHeader("content-type", destino.tipo);
+    x.upload.onprogress = e => { if(e.lengthComputable){ const p = Math.round(e.loaded / e.total * 100);
+      barra.querySelector("i").style.width = p + "%";
+      barra.querySelector("span").textContent = p < 100 ? `${p} % · ${(e.loaded / 1048576).toFixed(0)} de ${(e.total / 1048576).toFixed(0)} MB` : "Terminando…"; } };
+    x.onload = () => { barra.hidden = true; x.status >= 200 && x.status < 300 ? ok() : ko(new Error(`Cloudflare ha rechazado la subida (${x.status}). Revisa la configuración CORS del bucket.`)); };
+    x.onerror = () => { barra.hidden = true; ko(new Error("Se ha cortado la subida. Si pasa siempre, revisa la configuración CORS del bucket de Cloudflare.")); };
+    x.send(f);
+  });
+}
+window.addEventListener("beforeunload", e => { if(!$("#v-prog").hidden){ e.preventDefault(); e.returnValue = ""; } });
+
 $("#v-file").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = ""; if(!f) return;
   const titulo = $("#v-titulo").value.trim() || f.name.replace(/\.[^.]+$/, "");
+  const extra = { titulo, descripcion: $("#v-desc").value.trim(), duracion: $("#v-duracion").value.trim(), createdAt: serverTimestamp() };
   try {
-    const r = await subir(f, { privado: true, prog: "#v-prog" });
-    await addDoc(collection(db, "privateVideos"), { titulo, descripcion: $("#v-desc").value.trim(), duracion: $("#v-duracion").value.trim(),
-      publicId: r.public_id, formato: r.format || "mp4", bytes: r.bytes || 0, createdAt: serverTimestamp() });
+    const destino = await api("r2-subida", { nombre: f.name, tipo: f.type || "video/mp4", bytes: f.size });
+    if(destino.configurado){
+      await subirR2(f, destino, "#v-prog");
+      await addDoc(collection(db, "privateVideos"), { ...extra, r2Key: destino.clave, formato: destino.clave.split(".").pop(), bytes: f.size });
+    } else {
+      const r = await subir(f, { privado: true, prog: "#v-prog" });
+      await addDoc(collection(db, "privateVideos"), { ...extra, publicId: r.public_id, formato: r.format || "mp4", bytes: r.bytes || 0 });
+    }
     ["#v-titulo", "#v-desc", "#v-duracion"].forEach(s => $(s).value = "");
     await cargarPrivados(); toast("Vídeo privado subido. Ahora asígnalo a un código o una invitación.");
   } catch(err){ toast(err.message, true); }

@@ -7,6 +7,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import { v2 as cloudinary } from "cloudinary";
 import { leerVideo } from "../../js/video.js";
+import { urlVer } from "./r2.mjs";
 
 if(!getApps().length){
   initializeApp({ credential: cert({
@@ -64,7 +65,9 @@ export function manejar(fn){
 }
 
 // Enlaces firmados de un vídeo protegido. Sin la clave secreta nadie puede generarlos.
-export function enlacesPrivados(v){
+export async function enlacesPrivados(v){
+  // vídeo privado guardado en Cloudflare R2
+  if(v.r2Key) return { url: await urlVer(v.r2Key), poster: "" };
   // vídeo privado guardado como enlace de YouTube o Vimeo
   if(v.enlace){
     const inc = leerVideo(v.enlace);

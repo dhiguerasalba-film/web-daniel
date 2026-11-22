@@ -20,6 +20,8 @@ async function pedir(body, token){
   return data;
 }
 
+// si la dirección temporal de un vídeo caduca con la página abierta, se pide otra sin que el cliente haga nada
+let renovar = null;
 function sala({ titular, videos }){
   $("#gate").hidden = true; $("#sala").hidden = false;
   $("#hola").textContent = titular ? `Visionado privado · ${titular}` : "Visionado privado";
@@ -39,6 +41,15 @@ function sala({ titular, videos }){
     } else {
       vid = document.createElement("video");
       Object.assign(vid, { controls: true, playsInline: true, preload: "metadata", poster: v.poster, src: v.url });
+      vid.dataset.id = v.id;
+      vid.addEventListener("error", async () => {
+        if(!renovar || vid.dataset.reintento) return;
+        vid.dataset.reintento = "1";
+        try {
+          const d = await renovar(), nuevo = d.videos.find(x => x.id === v.id);
+          if(nuevo && nuevo.url){ const t = vid.currentTime; vid.src = nuevo.url; vid.currentTime = t; vid.play().catch(() => {}); }
+        } catch {} finally { setTimeout(() => delete vid.dataset.reintento, 30000); }
+      });
       vid.setAttribute("controlslist", "nodownload"); vid.addEventListener("contextmenu", e => e.preventDefault());
     }
     const h = document.createElement("h3"); h.textContent = v.titulo || "Sin título";
@@ -68,6 +79,7 @@ async function conCodigo(codigo, email){
   try {
     const d = await pedir(llave ? { codigo, llave } : { codigo, email });
     if(d.llave) guardarLlave(codigo, d.llave); else guardar("dha-ultimo", codigo);
+    renovar = () => pedir({ codigo, llave: llaves()[codigo] });
     msg(""); sala(d);
   } catch(e){
     if(llave && /otro dispositivo|no existe|caducado|retirado/.test(e.message)){ const l = llaves(); delete l[codigo]; guardar("dha-llaves", JSON.stringify(l)); }
@@ -78,7 +90,7 @@ async function conCodigo(codigo, email){
 
 async function conSesion(user){
   msg("Abriendo…");
-  try { const d = await pedir({}, await user.getIdToken()); msg(""); sala(d); }
+  try { const d = await pedir({}, await user.getIdToken()); renovar = async () => pedir({}, await user.getIdToken(true)); msg(""); sala(d); }
   catch(e){ msg(e.message); }
 }
 

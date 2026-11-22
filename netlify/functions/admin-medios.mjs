@@ -1,6 +1,7 @@
 // Acciones del panel sobre archivos de Cloudinary: ver un vídeo privado,
 // renovar su enlace (los enlaces antiguos dejan de funcionar) y borrar archivos.
 import { manejar, exigirAdmin, db, cloudinary, enlacesPrivados, codigoAleatorio, ErrorHttp, CARPETA_PRIVADA } from "../lib/comun.mjs";
+import { borrar as borrarR2 } from "../lib/r2.mjs";
 
 export default manejar(async (req, body) => {
   await exigirAdmin(req);
@@ -12,9 +13,10 @@ export default manejar(async (req, body) => {
     if(!snap.exists) throw new ErrorHttp(404, "Ese vídeo ya no existe.");
     const v = snap.data();
 
-    if(accion === "ver") return enlacesPrivados(v);
+    if(accion === "ver") return await enlacesPrivados(v);
 
     if(accion === "renovar"){
+      if(v.r2Key) throw new ErrorHttp(400, "Los vídeos de Cloudflare no necesitan renovarse: sus enlaces caducan solos a las pocas horas.");
       if(!v.publicId) throw new ErrorHttp(400, "Los vídeos de YouTube o Vimeo no se renuevan desde aquí: cambia su privacidad en esa plataforma.");
       const nuevo = `${CARPETA_PRIVADA}/${codigoAleatorio(16)}`;
       await cloudinary.uploader.rename(v.publicId, nuevo, { resource_type: "video", type: "authenticated", to_type: "authenticated", invalidate: true });
@@ -23,6 +25,7 @@ export default manejar(async (req, body) => {
     }
 
     if(v.publicId) await cloudinary.uploader.destroy(v.publicId, { resource_type: "video", type: "authenticated", invalidate: true });
+    if(v.r2Key) await borrarR2(v.r2Key);
     await ref.delete();
     // quitarlo de códigos e invitaciones
     for(const col of ["accessCodes", "invites"]){
