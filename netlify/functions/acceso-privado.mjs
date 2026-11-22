@@ -28,11 +28,19 @@ export default manejar(async (req, body) => {
     ids = s.data().videoIds || []; titular = s.data().nombre || u.email;
   }
 
-  const snaps = ids.length ? await db.getAll(...ids.map(id => db.collection("privateVideos").doc(id))) : [];
+  // ids normales = colección privateVideos; "w:<id>" = trabajo del portfolio marcado como privado
+  const refs = ids.map(id => id.startsWith("w:") ? db.collection("works").doc(id.slice(2)) : db.collection("privateVideos").doc(id));
+  const snaps = refs.length ? await db.getAll(...refs) : [];
   const videos = snaps.filter(s => s.exists).map(s => {
-    const v = s.data();
-    return { id: s.id, titulo: v.titulo || "", descripcion: v.descripcion || "", duracion: v.duracion || "", ...enlacesPrivados(v) };
-  });
+    const v = s.data(), esTrabajo = s.ref.parent.id === "works";
+    if(esTrabajo && !v.privado) return null;               // si vuelve a ser público, se ve en la web normal
+    const medio = esTrabajo
+      ? (v.enlace ? enlacesPrivados({ enlace: v.enlace }) : { url: v.videoUrl || "", poster: v.posterUrl || "" })
+      : enlacesPrivados(v);
+    if(!medio.embed && !medio.url) return null;
+    const meta = esTrabajo ? [v.categoria, v.rol, v.anio].filter(Boolean).join(" · ") : "";
+    return { id: s.id, titulo: v.titulo || "", descripcion: v.descripcion || "", duracion: [v.duracion, meta].filter(Boolean).join(" · "), ...medio };
+  }).filter(Boolean);
   await ref.update({ usos: FieldValue.increment(1), ultimoAcceso: new Date() }).catch(() => {});
   return { titular, videos };
 });

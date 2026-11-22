@@ -22,7 +22,8 @@ export function leerVideo(url){
   // Vimeo: vimeo.com/ID · vimeo.com/ID/HASH (oculto) · player.vimeo.com/video/ID?h=HASH
   if(host === "vimeo.com" || host === "player.vimeo.com"){
     const nums = partes.filter(p => /^\d{5,}$/.test(p));
-    const id = nums[0];
+    const iv = partes.indexOf("video");
+    const id = (iv >= 0 && /^\d{5,}$/.test(partes[iv + 1] || "")) ? partes[iv + 1] : nums[nums.length > 1 && /^(showcase|album|channels|groups)$/.test(partes[0]) ? nums.length - 1 : 0];
     if(id){
       let hash = u.searchParams.get("h") || "";
       const despues = partes[partes.indexOf(id) + 1];

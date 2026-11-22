@@ -50,12 +50,13 @@ function pintar(){
   if(!trabajos.length) lista.append(el("li", { class: "empty", text: "Pronto, trabajos nuevos." }));
   trabajos.forEach(w => {
     const meta = [w.categoria, w.rol, w.cliente, w.anio].filter(Boolean).join(" · ");
-    const b = el("button", { class: "w", type: "button" },
+    const b = el("button", { class: "w", type: "button", "aria-expanded": "false" },
       el("span", { class: "t", text: w.titulo }),
       el("span", { class: "d", text: w.duracion || "" }),
       el("span", { class: "m" }, meta, (!w.videoUrl && w.enlace && !leerVideo(w.enlace)) ? el("span", { class: "ext", text: "↗" }) : null));
-    b.addEventListener("click", () => abrir(w));
-    lista.append(el("li", { "data-k": (w.categoria || "").toLowerCase() }, b));
+    const li = el("li", { "data-k": (w.categoria || "").toLowerCase() }, b);
+    b.addEventListener("click", () => abrir(w, li, b));
+    lista.append(li);
   });
 
   const cats = [...new Set(trabajos.map(w => w.categoria).filter(Boolean))];
@@ -97,31 +98,44 @@ function pintar(){
 }
 function n_hidden(sel, h){ const n = $(sel); if(n) n.hidden = h; }
 
-// reproductor: vídeo subido a Cloudinary, o YouTube / Vimeo incrustado
+// reproductor integrado: el vídeo se despliega dentro de la lista, debajo del trabajo
 const pl = $("#player"), pv = $("#player-v"), pf = $("#player-f");
-function abrir(w){
+let abierto = null;
+function cerrarIntegrado(){
+  if(!abierto) return;
+  abierto.caja.querySelectorAll("video").forEach(v => v.pause());
+  abierto.caja.remove(); abierto.boton.setAttribute("aria-expanded", "false"); abierto.li.classList.remove("open");
+  abierto = null;
+}
+function abrir(w, li, boton){
   const inc = !w.videoUrl ? leerVideo(w.enlace) : null;
   if(!w.videoUrl && !inc){ if(w.enlace) window.open(w.enlace, "_blank", "noopener"); else location.hash = "contacto"; return; }
-  $("#player-t").textContent = w.titulo;
-  $("#player-m").textContent = [w.categoria, w.rol, w.anio, w.duracion].filter(Boolean).join(" · ");
-  $("#player-d").textContent = w.descripcion || "";
+  const yaEra = abierto && abierto.li === li;
+  cerrarIntegrado();
+  if(yaEra) return;                      // segundo clic en el mismo trabajo: se cierra
+  const marco = el("div", { class: "inline-video" });
   if(inc){
-    pv.hidden = true; pf.hidden = false;
     const f = document.createElement("iframe");
     f.src = conAutoplay(inc.embed); f.title = w.titulo || "Vídeo";
     f.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media";
     f.allowFullscreen = true; f.referrerPolicy = "strict-origin-when-cross-origin";
-    pf.replaceChildren(f);
+    marco.append(f);
   } else {
-    pf.hidden = true; pf.replaceChildren(); pv.hidden = false;
-    pv.src = w.videoUrl; pv.poster = cld(w.posterUrl, 1600);
+    const v = document.createElement("video");
+    Object.assign(v, { controls: true, playsInline: true, autoplay: true, src: w.videoUrl, poster: cld(w.posterUrl, 1200) });
+    marco.append(v);
   }
-  pl.hidden = false; $("#player-x").focus();
-  if(!inc) pv.play().catch(() => {});
+  const caja = el("div", { class: "inline-player" }, marco,
+    w.descripcion ? el("p", { class: "inline-desc", text: w.descripcion }) : null,
+    el("button", { class: "inline-x", type: "button", text: "Cerrar ✕", onclick: cerrarIntegrado }));
+  li.append(caja); li.classList.add("open"); boton.setAttribute("aria-expanded", "true");
+  abierto = { li, caja, boton };
+  setTimeout(() => caja.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" }), 60);
 }
+window.addEventListener("hashchange", cerrarIntegrado);
 function cerrar(){ pv.pause(); pv.removeAttribute("src"); pv.load(); pf.replaceChildren(); pl.hidden = true; }
 $("#player-x").addEventListener("click", cerrar);
-document.addEventListener("keydown", e => { if(e.key === "Escape" && !pl.hidden) cerrar(); });
+document.addEventListener("keydown", e => { if(e.key !== "Escape") return; if(!pl.hidden) cerrar(); else cerrarIntegrado(); });
 
 // formulario de contacto: se guarda en Firestore y Dani lo ve en el panel
 $("#f").addEventListener("submit", async e => {

@@ -198,7 +198,7 @@ async function cargarTrabajos(){
   if(!trabajos.length) l.append(el("li", {}, el("span", { class: "empty", text: "Aún no hay trabajos. Crea el primero con «+ Nuevo trabajo»." })));
   trabajos.forEach((w, i) => l.append(el("li", {},
     el("div", {}, el("div", { class: "t" }, w.titulo || "Sin título",
-        w.visible ? null : el("span", { class: "pill off", text: "oculto" }), w.destacado ? el("span", { class: "pill on", text: "destacado" }) : null),
+        w.privado ? el("span", { class: "pill", text: "privado" }) : w.visible ? null : el("span", { class: "pill off", text: "oculto" }), w.destacado ? el("span", { class: "pill on", text: "destacado" }) : null),
       el("div", { class: "s", text: [w.categoria, w.anio, w.duracion, w.videoUrl ? "vídeo subido" : leerVideo(w.enlace) ? (leerVideo(w.enlace).tipo === "vimeo" ? "Vimeo" : "YouTube") : w.enlace ? "enlace externo" : "sin vídeo"].filter(Boolean).join(" · ") })),
     el("div", { class: "acts" },
       el("button", { class: "btn small", type: "button", text: "↑", "aria-label": "Subir", disabled: i === 0, onclick: () => mover(i, -1) }),
@@ -217,6 +217,7 @@ function editar(w){
   borrador = { videoUrl: w?.videoUrl || "", videoPublicId: w?.videoPublicId || "", posterUrl: w?.posterUrl || "" };
   W.forEach(k => $(`#w-${k}`).value = w?.[k] ?? "");
   $("#w-visible").checked = w ? w.visible !== false : true;
+  $("#w-privado").checked = !!w?.privado; marcarPrivado();
   $("#w-destacado").checked = !!w?.destacado;
   $("#w-ed-t").textContent = w ? "Editar trabajo" : "Nuevo trabajo";
   $("#w-borrar").hidden = !w;
@@ -238,6 +239,12 @@ function pintarMedios(){
   const poster = borrador.posterUrl || posterDeVideo(borrador.videoUrl) || (inc && inc.poster) || "";
   p.hidden = !poster; if(poster) p.src = cld(poster, 500);
 }
+function marcarPrivado(){
+  const p = $("#w-privado").checked;
+  for(const id of ["#w-visible", "#w-destacado"]){ const c = $(id); c.disabled = p; if(p) c.checked = false; c.closest("label").style.opacity = p ? .45 : 1; }
+  if(!p && !$("#w-visible").checked && !editando) $("#w-visible").checked = true;
+}
+$("#w-privado").addEventListener("change", () => { if(!$("#w-privado").checked) $("#w-visible").checked = true; marcarPrivado(); });
 $("#w-nuevo").addEventListener("click", () => editar(null));
 $("#w-cancelar").addEventListener("click", () => { $("#w-editor").hidden = true; });
 $("#w-video-file").addEventListener("change", async e => {
@@ -252,14 +259,17 @@ $("#w-poster-file").addEventListener("change", async e => {
 });
 $("#w-video-quitar").addEventListener("click", () => { borrador.videoUrl = ""; borrador.videoPublicId = ""; pintarMedios(); });
 $("#w-guardar").addEventListener("click", e => ocupado(e.target, async () => {
-  const datos = { visible: $("#w-visible").checked, destacado: $("#w-destacado").checked,
+  const privado = $("#w-privado").checked;
+  // un trabajo privado nunca es visible: así la base de datos no lo enseña al público
+  const datos = { privado, visible: privado ? false : $("#w-visible").checked, destacado: privado ? false : $("#w-destacado").checked,
     videoUrl: borrador.videoUrl, videoPublicId: borrador.videoPublicId,
     posterUrl: borrador.posterUrl || posterDeVideo(borrador.videoUrl) || (leerVideo($("#w-enlace").value)?.poster || "") };
   W.forEach(k => datos[k] = $(`#w-${k}`).value.trim());
   if(!datos.titulo) throw new Error("Ponle un título al trabajo.");
   if(editando) await updateDoc(doc(db, "works", editando), datos);
   else await addDoc(collection(db, "works"), { ...datos, orden: trabajos.length + 1, createdAt: serverTimestamp() });
-  $("#w-editor").hidden = true; await cargarTrabajos(); toast("Trabajo guardado.");
+  $("#w-editor").hidden = true; await cargarTrabajos(); pintarChecks("#k-videos"); pintarChecks("#i-videos");
+  toast(privado ? "Trabajo guardado como privado. Ya puedes elegirlo al crear un código." : "Trabajo guardado.");
 }));
 $("#w-borrar").addEventListener("click", e => ocupado(e.target, async () => {
   const w = trabajos.find(x => x.id === editando); if(!w) return;
@@ -325,14 +335,22 @@ $("#v-file").addEventListener("change", async e => {
   } catch(err){ toast(err.message, true); }
 });
 
+function opcionesPrivadas(){
+  // vídeos privados sueltos + trabajos del portfolio marcados como privados ("w:<id>")
+  return [
+    ...privados.map(v => ({ id: v.id, titulo: v.titulo || "Sin título", grupo: "Vídeos privados" })),
+    ...trabajos.filter(w => w.privado).map(w => ({ id: "w:" + w.id, titulo: w.titulo || "Sin título", grupo: "Portfolio privado" }))
+  ];
+}
 function pintarChecks(sel, marcados = []){
   const box = $(sel); box.replaceChildren();
-  if(!privados.length){ box.append(el("p", { class: "hint", text: "Primero sube algún vídeo en «Vídeos privados»." })); return; }
-  privados.forEach(v => { const id = `${sel.slice(1)}-${v.id}`;
-    box.append(el("label", { for: id }, el("input", { type: "checkbox", id, value: v.id, checked: marcados.includes(v.id) }), v.titulo || "Sin título")); });
+  const ops = opcionesPrivadas();
+  if(!ops.length){ box.append(el("p", { class: "hint", text: "Primero sube un vídeo en «Vídeos privados» o marca un trabajo del portfolio como privado." })); return; }
+  ops.forEach(v => { const id = `${sel.slice(1)}-${v.id.replace(":", "_")}`;
+    box.append(el("label", { for: id, title: v.grupo }, el("input", { type: "checkbox", id, value: v.id, checked: marcados.includes(v.id) }), v.titulo + (v.id.startsWith("w:") ? " · portfolio" : ""))); });
 }
 const marcados = sel => $$(`${sel} input:checked`).map(i => i.value);
-const titulos = ids => ids.map(id => privados.find(v => v.id === id)?.titulo).filter(Boolean).join(", ") || "ningún vídeo";
+const titulos = ids => ids.map(id => opcionesPrivadas().find(v => v.id === id)?.titulo).filter(Boolean).join(", ") || "ningún vídeo";
 function elegirVideos(actuales){
   // ventana sencilla para cambiar los vídeos de un acceso existente
   return new Promise(res => {
@@ -443,6 +461,7 @@ async function arrancar(){
     const c = await getDoc(refCfg());
     existe = c.exists(); if(existe) cfg = mezclar(CONFIG_INICIAL, c.data());
     pintarCfg();
-    await Promise.all([cargarTrabajos(), recargarPrivado(), cargarMensajes()]);
+    await cargarTrabajos();   // primero, para poder ofrecer los trabajos privados en códigos e invitaciones
+    await Promise.all([recargarPrivado(), cargarMensajes()]);
   } catch(e){ console.error(e); toast("No se ha podido leer la base de datos. Revisa las reglas de Firestore (paso 5 de la guía).", true); }
 }
