@@ -48,10 +48,32 @@ function sala({ titular, videos }){
   }
 }
 
-async function conCodigo(codigo){
+// llaves de acceso por código guardadas en este navegador: { codigo: llave }
+function llaves(){ try { return JSON.parse(leer("dha-llaves") || "{}"); } catch { return {}; } }
+function guardarLlave(codigo, llave){ const l = llaves(); l[codigo] = llave; guardar("dha-llaves", JSON.stringify(l)); guardar("dha-ultimo", codigo); }
+
+function pedirEmail(codigo, texto){
+  $("#gate").hidden = false; $("#sala").hidden = true;
+  $("#codigo").value = codigo; $("#c-email").focus();
+  // viene con su enlace: no hace falta la opción de invitación por email
+  $("#f-email").hidden = true; document.querySelector(".gate .or").hidden = true;
+  msg(texto || "Escribe tu email para abrir el visionado.");
+}
+
+async function conCodigo(codigo, email){
+  codigo = codigo.trim().toLowerCase();
+  const llave = llaves()[codigo];
+  if(!llave && !email) return pedirEmail(codigo);
   msg("Abriendo…");
-  try { const d = await pedir({ codigo }); guardar("dha-codigo", codigo); msg(""); sala(d); }
-  catch(e){ guardar("dha-codigo", null); msg(e.message); }
+  try {
+    const d = await pedir(llave ? { codigo, llave } : { codigo, email });
+    if(d.llave) guardarLlave(codigo, d.llave); else guardar("dha-ultimo", codigo);
+    msg(""); sala(d);
+  } catch(e){
+    if(llave && /otro dispositivo|no existe|caducado|retirado/.test(e.message)){ const l = llaves(); delete l[codigo]; guardar("dha-llaves", JSON.stringify(l)); }
+    if(/email/i.test(e.message) && !email) return pedirEmail(codigo, e.message);
+    $("#gate").hidden = false; $("#sala").hidden = true; msg(e.message);
+  }
 }
 
 async function conSesion(user){
@@ -62,9 +84,10 @@ async function conSesion(user){
 
 $("#f-codigo").addEventListener("submit", e => {
   e.preventDefault();
-  const c = $("#codigo").value.trim();
+  const c = $("#codigo").value.trim(), em = $("#c-email").value.trim();
   if(!c) return msg("Escribe el código que te ha pasado Daniel.");
-  conCodigo(c);
+  if(!llaves()[c.toLowerCase()] && (!em || !$("#c-email").validity.valid)) return msg("Escribe tu email para abrir el visionado.");
+  conCodigo(c, em);
 });
 
 $("#f-email").addEventListener("submit", async e => {
@@ -81,7 +104,7 @@ $("#f-email").addEventListener("submit", async e => {
 });
 
 $("#salir").addEventListener("click", async () => {
-  guardar("dha-codigo", null);
+  guardar("dha-ultimo", null);   // la llave se queda: con el mismo enlace puede volver a entrar
   if(auth) await signOut(auth).catch(() => {});
   history.replaceState(null, "", "/privado/");
   $("#sala").hidden = true; $("#gate").hidden = false; $("#grid").replaceChildren(); msg("");
@@ -111,8 +134,8 @@ async function completar(email){
     return msg("Para terminar de entrar, confirma tu email y pulsa «Entrar».");
   }
 
-  const guardado = leer("dha-codigo");
-  if(guardado) return conCodigo(guardado);
+  const guardado = leer("dha-ultimo");
+  if(guardado && llaves()[guardado]) return conCodigo(guardado);
 
   if(configurado) onAuthStateChanged(auth, u => { if(u && !u.isAnonymous) conSesion(u); });
 })();

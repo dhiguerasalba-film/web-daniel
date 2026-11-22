@@ -7,7 +7,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, getDocs, query, orderBy,
-  serverTimestamp, Timestamp, writeBatch
+  serverTimestamp, Timestamp, writeBatch, deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = s => document.querySelector(s);
@@ -365,19 +365,40 @@ function elegirVideos(actuales){
 // ---------- códigos ----------
 const nuevoCodigo = () => { const abc = "abcdefghjkmnpqrstuvwxyz23456789"; return Array.from(crypto.getRandomValues(new Uint8Array(12)), b => abc[b % abc.length]).join(""); };
 const enlaceCodigo = c => `${location.origin}/privado/?c=${c}`;
+// historial de entradas (las más recientes primero)
+function historial(accesos){
+  const lista = [...(accesos || [])].sort((a, b) => (b.at?.toMillis?.() || 0) - (a.at?.toMillis?.() || 0));
+  if(!lista.length) return null;
+  const det = el("details", { class: "hist" }, el("summary", { text: `Historial (${lista.length})` }));
+  lista.slice(0, 40).forEach(a => det.append(el("div", { class: "s",
+    text: `${fecha(a.at)} · ${a.email || "—"}${a.nuevo ? " · primera vez" : ""}${a.disp ? " · " + dispositivo(a.disp) : ""}` })));
+  return det;
+}
+function dispositivo(ua){
+  const so = /iPhone|iPad/.test(ua) ? "iPhone/iPad" : /Android/.test(ua) ? "Android" : /Mac OS/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : "";
+  const nav = /Edg\//.test(ua) ? "Edge" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "";
+  return [so, nav].filter(Boolean).join(" · ");
+}
 async function cargarCodigos(){
   const s = await getDocs(query(collection(db, "accessCodes"), orderBy("createdAt", "desc")));
   const l = $("#k-lista"); l.replaceChildren();
   if(s.empty) l.append(el("li", {}, el("span", { class: "empty", text: "No hay códigos creados." })));
   s.docs.forEach(d => { const c = d.data(), caducado = c.caduca && c.caduca.toDate() < new Date();
+    const unUso = c.unUso !== false, usado = Object.keys(c.llaves || {}).length > 0;
+    const estado = c.activo === false ? ["off", "retirado"] : caducado ? ["off", "caducado"] : (unUso && usado) ? ["on", "en uso"] : ["on", "sin abrir"];
     l.append(el("li", {},
       el("div", {}, el("div", { class: "t" }, c.nombre || "Sin nombre",
-          el("span", { class: `pill ${c.activo === false || caducado ? "off" : "on"}`, text: c.activo === false ? "retirado" : caducado ? "caducado" : "activo" })),
+          el("span", { class: `pill ${estado[0]}`, text: estado[1] }), unUso ? el("span", { class: "pill", text: "un dispositivo" }) : null),
         el("div", { class: "s", text: `${d.id} · ${titulos(c.videoIds || [])}` }),
-        el("div", { class: "s", text: `Caduca: ${c.caduca ? c.caduca.toDate().toLocaleDateString("es-ES") : "nunca"} · ${c.usos || 0} visitas · último acceso ${fecha(c.ultimoAcceso)}` })),
+        el("div", { class: "s", text: usado ? `Abierto por ${c.usadoPor || "—"} el ${fecha(c.primerAcceso)}` : "Todavía no lo ha abierto nadie" }),
+        el("div", { class: "s", text: `Caduca: ${c.caduca ? c.caduca.toDate().toLocaleDateString("es-ES") : "nunca"} · ${c.usos || 0} visitas · último acceso ${fecha(c.ultimoAcceso)}` }),
+        historial(c.accesos)),
       el("div", { class: "acts" },
         el("button", { class: "btn small", type: "button", text: "Copiar enlace", onclick: e => copiar(enlaceCodigo(d.id), e.target) }),
         el("button", { class: "btn small", type: "button", text: "Vídeos", onclick: async () => { const ids = await elegirVideos(c.videoIds || []); if(ids){ await updateDoc(d.ref, { videoIds: ids }); cargarCodigos(); } } }),
+        usado ? el("button", { class: "btn small", type: "button", text: "Liberar dispositivo", title: "El enlace volverá a funcionar en un dispositivo nuevo (por ejemplo, si el cliente cambió de móvil)",
+          onclick: async () => { if(confirm("El dispositivo que lo abrió perderá el acceso y el enlace volverá a servir para un dispositivo nuevo. ¿Seguir?")){
+            await updateDoc(d.ref, { llaves: deleteField(), usadoPor: deleteField(), primerAcceso: deleteField() }); cargarCodigos(); toast("Liberado. El enlace vuelve a funcionar una vez."); } } }) : null,
         el("button", { class: "btn small", type: "button", text: c.activo === false ? "Reactivar" : "Retirar", onclick: async () => { await updateDoc(d.ref, { activo: c.activo === false }); cargarCodigos(); } }),
         el("button", { class: "btn small", type: "button", text: "Borrar", onclick: async () => { if(confirm("¿Borrar este código? Quien lo tenga ya no podrá entrar.")){ await deleteDoc(d.ref); cargarCodigos(); } } }))));
   });
@@ -385,9 +406,9 @@ async function cargarCodigos(){
 $("#k-crear").addEventListener("click", e => ocupado(e.target, async () => {
   const ids = marcados("#k-videos"); if(!ids.length) throw new Error("Marca al menos un vídeo.");
   const f = $("#k-caduca").value, codigo = nuevoCodigo();
-  await setDoc(doc(db, "accessCodes", codigo), { nombre: $("#k-nombre").value.trim(), videoIds: ids, activo: true, usos: 0,
+  await setDoc(doc(db, "accessCodes", codigo), { nombre: $("#k-nombre").value.trim(), videoIds: ids, activo: true, usos: 0, unUso: $("#k-unuso").checked,
     caduca: f ? Timestamp.fromDate(new Date(f + "T23:59:59")) : null, createdAt: serverTimestamp() });
-  $("#k-nombre").value = ""; $("#k-caduca").value = ""; pintarChecks("#k-videos");
+  $("#k-nombre").value = ""; $("#k-caduca").value = ""; $("#k-unuso").checked = true; pintarChecks("#k-videos");
   await cargarCodigos(); copiar(enlaceCodigo(codigo)); toast("Código creado. Enlace copiado para que lo pegues donde quieras.");
 }));
 function copiar(t, btn){
@@ -408,7 +429,8 @@ async function cargarInvitaciones(){
     l.append(el("li", {},
       el("div", {}, el("div", { class: "t" }, c.nombre || d.id, el("span", { class: `pill ${c.activo === false ? "off" : "on"}`, text: c.activo === false ? "retirada" : "activa" })),
         el("div", { class: "s", text: `${d.id} · ${titulos(c.videoIds || [])}` }),
-        el("div", { class: "s", text: `Enviada ${fecha(c.enviadoEn)} · ${c.usos || 0} visitas · último acceso ${fecha(c.ultimoAcceso)}` })),
+        el("div", { class: "s", text: `Enviada ${fecha(c.enviadoEn)} · ${c.usos || 0} visitas · último acceso ${fecha(c.ultimoAcceso)}` }),
+        historial(c.accesos)),
       el("div", { class: "acts" },
         el("button", { class: "btn small", type: "button", text: "Reenviar", onclick: e => ocupado(e.target, async () => { await enviarInvitacion(d.id); toast(`Invitación reenviada a ${d.id}.`); cargarInvitaciones(); }) }),
         el("button", { class: "btn small", type: "button", text: "Vídeos", onclick: async () => { const ids = await elegirVideos(c.videoIds || []); if(ids){ await updateDoc(d.ref, { videoIds: ids }); cargarInvitaciones(); } } }),

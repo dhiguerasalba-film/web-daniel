@@ -200,11 +200,12 @@
     </section>
 
     <section data-sec="codigos" hidden>
-      <header class="sec-h"><h2>Códigos de acceso</h2><p>Para pasar por WhatsApp o email. Quien tenga el enlace entra sin registrarse.</p></header>
+      <header class="sec-h"><h2>Códigos de acceso</h2><p>Para pasar por WhatsApp o email. La primera vez, la persona escribe su email; aquí verás quién lo abrió y cuándo.</p></header>
       <div class="card grid2">
         <div class="f"><label for="k-nombre">Para quién</label><input id="k-nombre" placeholder="Productora Lumbre"></div>
         <div class="f"><label for="k-caduca">Caduca el (opcional)</label><input id="k-caduca" type="date"></div>
         <div class="f full"><label>Vídeos que verá</label><div class="checks" id="k-videos"></div></div>
+        <label class="check full"><input type="checkbox" id="k-unuso" checked> Un solo dispositivo: el enlace queda atado al primero que lo abre y no sirve si lo reenvían</label>
       </div>
       <div class="bar"><button class="btn primary" type="button" id="k-crear">Crear código</button></div>
       <div class="card flush"><ul class="rows" id="k-lista"></ul></div>
