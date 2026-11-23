@@ -2,6 +2,10 @@
   publish = "."
   command = "echo 'Sin compilación: sitio estático + funciones'"
 
+# Versión de Node fija: las librerías de Cloudflare (R2) piden Node 20 o más.
+[build.environment]
+  NODE_VERSION = "22"
+
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
