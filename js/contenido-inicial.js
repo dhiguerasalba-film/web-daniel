@@ -44,7 +44,8 @@ export const CONFIG_INICIAL = {
       { nombre: "vimeo", usuario: "/danielhigueras", url: "https://vimeo.com/" }
     ]
   },
-  fondos: { inicio: "", portfolio: "", bio: "", contacto: "", redes: "" }
+  fondos: { inicio: "", portfolio: "", bio: "", contacto: "", redes: "" },
+  letras: { titulos: "Anton", texto: "Archivo", detalles: "IBM Plex Mono", escala: 100 }
 };
 
 export const TRABAJOS_INICIALES = [

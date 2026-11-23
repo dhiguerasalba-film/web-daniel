@@ -2,6 +2,7 @@
 // configurado todavía o no responde, se queda con el contenido de partida.
 import { db, configurado, mezclar, cld } from "./firebase.js";
 import { CONFIG_INICIAL, TRABAJOS_INICIALES } from "./contenido-inicial.js";
+import { aplicarYRecordar } from "./letras.js";
 import { leerVideo, conAutoplay } from "./video.js";
 import { contar } from "./visitas.js";
 
@@ -38,6 +39,9 @@ function pintar(){
   document.querySelectorAll("[data-t]").forEach(n => { const v = get(cfg, n.dataset.t); if(typeof v === "string") n.textContent = v; });
   n_hidden("[data-t='portfolio.pie']", !cfg.portfolio.pie);
   document.title = `${cfg.nombre} · ${cfg.inicio.kicker.split("·")[0].trim()}`;
+
+  // letras elegidas en el panel
+  aplicarYRecordar(cfg.letras || {});
 
   // fondos sustituidos desde el panel
   for(const [vista, url] of Object.entries(cfg.fondos || {})){

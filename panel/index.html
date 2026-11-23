@@ -40,6 +40,7 @@
       <a href="#contacto">Contacto</a>
       <a href="#redes">Redes sociales</a>
       <a href="#fondos">Fotos de fondo</a>
+      <a href="#letras">Letras</a>
       <p class="grp">Privado</p>
       <a href="#videos">Vídeos privados</a>
       <a href="#codigos">Códigos de acceso</a>
@@ -176,6 +177,29 @@
     <section data-sec="fondos" hidden>
       <header class="sec-h"><h2>Fotos de fondo</h2><p>Una foto vertical por sección, en blanco y negro funciona mejor. Se guarda al subirla.</p></header>
       <div class="fondos" id="fondos"></div>
+    </section>
+
+    <section data-sec="letras" hidden>
+      <header class="sec-h"><h2>Letras</h2><p>Elige la letra de cada parte de la web. Abajo ves cómo queda antes de guardar.</p></header>
+      <div class="card grid2">
+        <div class="f"><label for="l-titulos">Títulos grandes y nombres de trabajos</label><select id="l-titulos" data-papel="titulos"></select>
+          <input id="l-titulos-otra" class="otra" placeholder="Nombre exacto en Google Fonts" hidden></div>
+        <div class="f"><label for="l-texto">Texto (bio, descripciones)</label><select id="l-texto" data-papel="texto"></select>
+          <input id="l-texto-otra" class="otra" placeholder="Nombre exacto en Google Fonts" hidden></div>
+        <div class="f"><label for="l-detalles">Detalles (menú, etiquetas, botones)</label><select id="l-detalles" data-papel="detalles"></select>
+          <input id="l-detalles-otra" class="otra" placeholder="Nombre exacto en Google Fonts" hidden></div>
+        <div class="f"><label for="l-escala">Tamaño de los títulos: <b id="l-escala-v">100 %</b></label>
+          <input id="l-escala" type="range" min="60" max="130" step="5" value="100"></div>
+        <p class="hint full">¿Quieres otra? Búscala en <a href="https://fonts.google.com/?lang=es_Latn" target="_blank" rel="noopener">fonts.google.com</a>, elige «Otra de Google Fonts» y escribe su nombre tal cual sale allí (por ejemplo: <i>Space Grotesk</i>). Si una letra es más ancha que la de ahora, baja un poco el tamaño de los títulos.</p>
+      </div>
+      <div class="muestra" id="l-muestra">
+        <p class="m-det">director · realizador · madrid</p>
+        <p class="m-tit">daniel higueras alba</p>
+        <p class="m-txt">Cuento historias con imagen en movimiento: videoclips, publicidad y documental. Me gusta rodar con poca gente y mucha luz natural.</p>
+        <p class="m-det">portfolio &nbsp; bio &nbsp; contacto &nbsp; redes</p>
+      </div>
+      <div class="bar"><button class="btn primary" type="button" id="l-guardar">Guardar letras</button>
+        <button class="btn" type="button" id="l-original">Volver a las de origen</button></div>
     </section>
 
     <section data-sec="videos" hidden>

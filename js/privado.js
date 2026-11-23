@@ -1,7 +1,14 @@
 // Zona privada: acceso por código o por enlace al email.
-import { auth, configurado } from "./firebase.js";
+import { auth, db, configurado } from "./firebase.js";
 import { contar } from "./visitas.js";
+import { aplicarYRecordar } from "./letras.js";
 contar({ s: "privado" });
+
+// misma letra que la web pública
+if(configurado) import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js")
+  .then(({ doc, getDoc }) => getDoc(doc(db, "site", "config")))
+  .then(c => { if(c.exists() && c.data().letras) aplicarYRecordar(c.data().letras); })
+  .catch(() => {});
 import { sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 

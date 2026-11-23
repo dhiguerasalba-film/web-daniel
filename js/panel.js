@@ -3,6 +3,7 @@ import { db, auth, configurado, mezclar, cld } from "./firebase.js";
 import { CONFIG_INICIAL, TRABAJOS_INICIALES } from "./contenido-inicial.js";
 import { leerVideo } from "./video.js";
 import { marcarComoDani } from "./visitas.js";
+import { CATALOGO, DEFECTO, receta, nombreValido } from "./letras.js";
 import {
   signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendSignInLinkToEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -121,6 +122,7 @@ function pintarCfg(){
   $$(".rep").forEach(r => pintarRep(r, getP(cfg, r.dataset.path) || []));
   $("#vacio").hidden = existe;
   pintarFondos();
+  pintarLetras();
 }
 
 function campos(rep){ return rep.dataset.kind.includes(":") ? rep.dataset.kind.split("|").map(x => { const [k, l] = x.split(":"); return { k, l }; }) : null; }
@@ -190,6 +192,66 @@ function pintarFondos(){
           await setDoc(refCfg(), { fondos: { [vista]: "" } }, { merge: true }); cfg.fondos[vista] = ""; pintarFondos(); toast("Recuperada la foto original."); } }) : null));
   }));
 }
+
+
+// ---------- letras ----------
+const PAPELES = ["titulos", "texto", "detalles"];
+const OTRA = "__otra__";
+function enCatalogo(papel, n){ return Object.values(CATALOGO[papel]).some(g => g.some(([x]) => x === n)); }
+function pintarLetras(){
+  const l = { ...DEFECTO, ...(cfg.letras || {}) };
+  PAPELES.forEach(papel => {
+    const sel = $(`#l-${papel}`), otra = $(`#l-${papel}-otra`);
+    sel.replaceChildren(
+      ...Object.entries(CATALOGO[papel]).map(([grupo, lista]) => el("optgroup", { label: grupo },
+        ...lista.map(([n]) => el("option", { value: n, text: n + (n === DEFECTO[papel] ? " (la de origen)" : "") })))),
+      el("option", { value: OTRA, text: "Otra de Google Fonts…" }));
+    const propia = !enCatalogo(papel, l[papel]);
+    sel.value = propia ? OTRA : l[papel];
+    otra.hidden = !propia; otra.value = propia ? l[papel] : "";
+  });
+  $("#l-escala").value = l.escala; muestraLetras();
+}
+function leerLetras(){
+  const l = { escala: Number($("#l-escala").value) || 100 };
+  PAPELES.forEach(papel => {
+    const sel = $(`#l-${papel}`);
+    l[papel] = sel.value === OTRA ? $(`#l-${papel}-otra`).value.trim().replace(/\s+/g, " ") : sel.value;
+  });
+  return l;
+}
+function muestraLetras(){
+  const l = leerLetras(), r = receta(l), m = $("#l-muestra");
+  PAPELES.forEach(papel => {
+    let link = document.getElementById("muestra-" + papel);
+    if(!link){ link = el("link", { rel: "stylesheet", id: "muestra-" + papel }); document.head.append(link); }
+    if(link.href !== r.enlaces[papel]) link.href = r.enlaces[papel];
+  });
+  for(const [k, v] of Object.entries(r.vars)) m.style.setProperty(k, v);
+  $("#l-escala-v").textContent = l.escala + " %";
+}
+let tLetras;
+PAPELES.forEach(papel => {
+  $(`#l-${papel}`).addEventListener("change", e => {
+    const otra = $(`#l-${papel}-otra`); otra.hidden = e.target.value !== OTRA;
+    if(!otra.hidden) otra.focus();
+    muestraLetras();
+  });
+  $(`#l-${papel}-otra`).addEventListener("input", () => { clearTimeout(tLetras); tLetras = setTimeout(muestraLetras, 600); });
+});
+$("#l-escala").addEventListener("input", muestraLetras);
+$("#l-guardar").addEventListener("click", e => ocupado(e.target, async () => {
+  const l = leerLetras();
+  for(const papel of PAPELES) if(!nombreValido(l[papel]))
+    throw new Error("Revisa el nombre de la letra: solo letras, números y espacios, tal cual sale en Google Fonts.");
+  await setDoc(refCfg(), { letras: l }, { merge: true });
+  cfg = mezclar(cfg, { letras: l }); existe = true;
+  toast("Letras guardadas. Recarga la web para verlas.");
+}));
+$("#l-original").addEventListener("click", () => {
+  cfg = mezclar(cfg, { letras: { ...DEFECTO } }); pintarLetras();
+  toast("Puestas las de origen. Pulsa «Guardar letras» para dejarlas así.");
+});
 
 // ---------- portfolio ----------
 let trabajos = [], editando = null, borrador = {};
