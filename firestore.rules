@@ -40,6 +40,12 @@ service cloud.firestore {
     match /accessCodes/{id}   { allow read, write: if esAdmin(); }
     match /invites/{id}       { allow read, write: if esAdmin(); }
 
+    // Estadísticas de visitas: las escribe el servidor; solo Dani las lee.
+    match /stats/{dia} {
+      allow read: if esAdmin();
+      allow write: if false;
+    }
+
     // Lista de administradores: se crea a mano en la consola (paso de la guía).
     match /admins/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;

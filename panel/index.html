@@ -46,6 +46,7 @@
       <a href="#invitaciones">Invitaciones por email</a>
       <p class="grp">Clientes</p>
       <a href="#mensajes">Mensajes <b class="badge" id="badge" hidden></b></a>
+      <a href="#estadisticas">Estadísticas</a>
     </nav>
     <div class="side-foot">
       <a href="/" target="_blank" rel="noopener">Ver la web ↗</a>
@@ -220,6 +221,24 @@
       </div>
       <div class="bar"><button class="btn primary" type="button" id="i-crear">Guardar y enviar invitación</button></div>
       <div class="card flush"><ul class="rows" id="i-lista"></ul></div>
+    </section>
+
+    <section data-sec="estadisticas" hidden>
+      <header class="sec-h"><h2>Estadísticas</h2><p>Visitas a tu web, sin cookies. Las tuyas no cuentan en este navegador.</p></header>
+      <div class="bar" role="group" aria-label="Periodo">
+        <button class="btn small" type="button" data-dias="7">7 días</button>
+        <button class="btn small" type="button" data-dias="30" aria-pressed="true">30 días</button>
+        <button class="btn small" type="button" data-dias="90">90 días</button>
+      </div>
+      <div class="kpis" id="st-kpis"></div>
+      <div class="card"><h3>Visitantes por día</h3><div class="grafica" id="st-grafica"></div></div>
+      <div class="st-grid">
+        <div class="card"><h3>De dónde llegan</h3><ul class="ranking" id="st-proc"></ul></div>
+        <div class="card"><h3>Trabajos más reproducidos</h3><ul class="ranking" id="st-trab"></ul></div>
+        <div class="card"><h3>Secciones más vistas</h3><ul class="ranking" id="st-sec"></ul></div>
+        <div class="card"><h3>Dispositivo y país</h3><ul class="ranking" id="st-disp"></ul><ul class="ranking" id="st-pais" style="margin-top:14px"></ul></div>
+      </div>
+      <p class="hint">«Visitantes» cuenta cada navegador una vez al día. «Visitas» cuenta cada vez que alguien entra. Los bots y los avances de enlaces (WhatsApp, Instagram) no cuentan.</p>
     </section>
 
     <section data-sec="mensajes" hidden>

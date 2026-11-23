@@ -3,6 +3,7 @@
 import { db, configurado, mezclar, cld } from "./firebase.js";
 import { CONFIG_INICIAL, TRABAJOS_INICIALES } from "./contenido-inicial.js";
 import { leerVideo, conAutoplay } from "./video.js";
+import { contar } from "./visitas.js";
 
 // Formspree: pega aquí el código del formulario (lo que va después de formspree.io/f/)
 // para que cada mensaje llegue también por email. Vacío = solo se guarda en el panel.
@@ -113,6 +114,7 @@ function abrir(w, li, boton){
   const yaEra = abierto && abierto.li === li;
   cerrarIntegrado();
   if(yaEra) return;                      // segundo clic en el mismo trabajo: se cierra
+  if(w.id) contar({ s: "portfolio", t: w.id });
   const marco = el("div", { class: "inline-video" });
   if(inc){
     const f = document.createElement("iframe");
@@ -172,3 +174,8 @@ $("#f").addEventListener("submit", async e => {
 const listo = () => document.documentElement.removeAttribute("data-cms-wait");
 setTimeout(listo, 2500);   // si la red va lenta, enseñamos lo que haya
 cargar().catch(err => console.warn("Contenido de partida:", err)).finally(() => { pintar(); listo(); });
+
+// contador de visitas: la sección de entrada y cada cambio de sección
+const seccion = () => (location.hash || "#inicio").slice(1) || "inicio";
+contar({ s: seccion() });
+window.addEventListener("hashchange", () => contar({ s: seccion() }));

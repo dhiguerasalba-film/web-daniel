@@ -2,6 +2,7 @@
 import { db, auth, configurado, mezclar, cld } from "./firebase.js";
 import { CONFIG_INICIAL, TRABAJOS_INICIALES } from "./contenido-inicial.js";
 import { leerVideo } from "./video.js";
+import { marcarComoDani } from "./visitas.js";
 import {
   signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendSignInLinkToEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -80,6 +81,7 @@ if(!configurado){
       return;
     }
     $("#login").hidden = true; $("#app").hidden = false;
+    marcarComoDani();   // sus propias visitas a la web dejan de contar en este navegador
     arrancar();
   });
 }
@@ -498,6 +500,55 @@ async function cargarMensajes(){
 }
 async function cargarBadge(){ const n = $$("#m-lista li.nuevo").length; $("#badge").hidden = !n; $("#badge").textContent = n; }
 
+// ---------- estadísticas ----------
+let stDias = 30;
+const NOMBRES = { whatsapp: "WhatsApp", linkedin: "LinkedIn", youtube: "YouTube", tiktok: "TikTok", inicio: "Portada", portfolio: "Portfolio", bio: "Bio", contacto: "Contacto", redes: "Redes", privado: "Sala privada",
+  directo: "Directo o desconocido", movil: "Móvil", ordenador: "Ordenador" };
+const PAISES = (() => { try { return new Intl.DisplayNames(["es"], { type: "region" }); } catch { return null; } })();
+function diasAtras(n){
+  const out = [], d = new Date();
+  for(let i = n - 1; i >= 0; i--){ const x = new Date(d); x.setDate(d.getDate() - i); out.push(x.toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" })); }
+  return out;
+}
+function sumarMapa(destino, mapa){ for(const [k, v] of Object.entries(mapa || {})) destino[k] = (destino[k] || 0) + (Number(v) || 0); }
+function ranking(sel, mapa, nombre = k => NOMBRES[k] || k, max = 8){
+  const ul = $(sel); ul.replaceChildren();
+  const filas = Object.entries(mapa).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, max);
+  if(!filas.length){ ul.append(el("li", { class: "vacio", text: "Sin datos todavía." })); return; }
+  const top = filas[0][1];
+  filas.forEach(([k, v]) => { const i = el("i"); i.style.setProperty("--p", `${Math.max(3, v / top * 100)}%`);
+    ul.append(el("li", {}, el("span", { text: nombre(k) }), el("b", { text: v.toLocaleString("es-ES") }), i)); });
+}
+async function cargarEstadisticas(){
+  const dias = diasAtras(stDias);
+  const snaps = await Promise.all(dias.map(d => getDoc(doc(db, "stats", d)).catch(() => null)));
+  const datos = snaps.map(s => (s && s.exists()) ? s.data() : {});
+  const tot = { visitantes: 0, visitas: 0, vistas: 0 }, proc = {}, sec = {}, disp = {}, pais = {}, rep = {};
+  datos.forEach(d => { tot.visitantes += d.visitantes || 0; tot.visitas += d.visitas || 0; tot.vistas += d.vistas || 0;
+    sumarMapa(proc, d.procedencias); sumarMapa(sec, d.secciones); sumarMapa(disp, d.dispositivos); sumarMapa(pais, d.paises); sumarMapa(rep, d.reproducciones); });
+  const totalRep = Object.values(rep).reduce((a, b) => a + b, 0);
+  $("#st-kpis").replaceChildren(...[
+    [tot.visitantes, "visitantes"], [tot.visitas, "visitas"], [tot.vistas, "páginas vistas"], [totalRep, "vídeos reproducidos"]
+  ].map(([n, t]) => el("div", { class: "kpi" }, el("b", { text: n.toLocaleString("es-ES") }), el("span", { text: `${t} · ${stDias} días` }))));
+  const g = $("#st-grafica"), maxV = Math.max(1, ...datos.map(d => d.visitantes || 0));
+  g.replaceChildren(...datos.map((d, i) => { const v = d.visitantes || 0, b = el("i", { class: v ? "" : "cero",
+    title: `${new Date(dias[i] + "T12:00").toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" })}: ${v} visitantes · ${d.visitas || 0} visitas` });
+    b.style.height = `${v / maxV * 100}%`; return b; }));
+  const fmt = d => new Date(d + "T12:00").toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+  g.nextElementSibling?.classList.contains("grafica-ejes") && g.nextElementSibling.remove();
+  g.after(el("div", { class: "grafica-ejes" }, el("span", { text: fmt(dias[0]) }), el("span", { text: `máximo ${maxV} al día` }), el("span", { text: "hoy" })));
+  ranking("#st-proc", proc, k => NOMBRES[k] || k.charAt(0).toUpperCase() + k.slice(1));
+  ranking("#st-sec", sec);
+  ranking("#st-trab", rep, k => trabajos.find(w => w.id === k)?.titulo || "Trabajo borrado");
+  ranking("#st-disp", disp);
+  ranking("#st-pais", pais, k => (PAISES && PAISES.of(k)) || k, 6);
+}
+$$("[data-dias]").forEach(b => b.addEventListener("click", () => {
+  stDias = Number(b.dataset.dias); $$("[data-dias]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  cargarEstadisticas().catch(e => toast(e.message, true));
+}));
+window.addEventListener("hashchange", () => { if(location.hash === "#estadisticas" && arrancado) cargarEstadisticas().catch(e => toast("No se han podido leer las estadísticas. ¿Están publicadas las reglas nuevas de Firebase?", true)); });
+
 // ---------- arranque ----------
 let arrancado = false;
 async function arrancar(){
@@ -509,5 +560,6 @@ async function arrancar(){
     pintarCfg();
     await cargarTrabajos();   // primero, para poder ofrecer los trabajos privados en códigos e invitaciones
     await Promise.all([recargarPrivado(), cargarMensajes()]);
+    if(location.hash === "#estadisticas") cargarEstadisticas().catch(() => toast("No se han podido leer las estadísticas. ¿Están publicadas las reglas nuevas de Firebase?", true));
   } catch(e){ console.error(e); toast("No se ha podido leer la base de datos. Revisa las reglas de Firestore (paso 5 de la guía).", true); }
 }

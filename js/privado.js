@@ -1,5 +1,7 @@
 // Zona privada: acceso por código o por enlace al email.
 import { auth, configurado } from "./firebase.js";
+import { contar } from "./visitas.js";
+contar({ s: "privado" });
 import { sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
