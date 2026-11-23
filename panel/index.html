@@ -10,12 +10,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="/panel/panel.css">
+<script src="/js/tema-panel.js"></script>
 </head>
 <body>
 
 <!-- LOGIN -->
 <div class="login" id="login" hidden>
   <form class="login-box" id="f-login" novalidate>
+    <button class="tema" type="button" data-tema-btn>☀ Modo día</button>
     <p class="eyebrow">Panel de la web</p>
     <h1>daniel higueras alba</h1>
     <label for="l-email">Email</label>
@@ -50,6 +52,7 @@
       <a href="#estadisticas">Estadísticas</a>
     </nav>
     <div class="side-foot">
+      <button class="tema" type="button" data-tema-btn>☀ Modo día</button>
       <a href="/" target="_blank" rel="noopener">Ver la web ↗</a>
       <button class="link" type="button" id="salir">Cerrar sesión</button>
     </div>
