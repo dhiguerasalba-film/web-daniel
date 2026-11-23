@@ -24,7 +24,9 @@
 # Política de seguridad: qué servicios puede usar la web. Si algún día se añade uno nuevo
 # (otra plataforma de vídeo, un formulario externo, analítica…), hay que añadir su dirección aquí
 # o no funcionará. Sin 'unsafe-inline' en script-src: no se ejecuta código suelto dentro del HTML
-# (por eso js/arranque.js va aparte). Esto además evita el aviso «Powered by Netlify».
+# (por eso js/arranque.js va aparte). Los scripts propios solo se aceptan de la carpeta /js/ de cada
+# dominio de la web: así no se carga el script que mete Netlify en /.netlify/ para el aviso «Powered by Netlify».
+# Si algún día cambia el dominio, hay que cambiarlo también aquí.
 #   Firebase ............ www.gstatic.com, *.googleapis.com, apis.google.com, web-daniel-e9cf1.firebaseapp.com
 #   Cloudinary .......... res.cloudinary.com (fotos y vídeos), api.cloudinary.com (subidas del panel)
 #   Cloudflare R2 ....... *.r2.cloudflarestorage.com (vídeos privados: ver y subir)
@@ -36,4 +38,4 @@
   [headers.values]
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "DENY"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://i.vimeocdn.com; media-src 'self' blob: https://res.cloudinary.com https://*.r2.cloudflarestorage.com; connect-src 'self' https://*.googleapis.com https://www.gstatic.com https://api.cloudinary.com https://*.r2.cloudflarestorage.com https://formspree.io; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://player.vimeo.com https://web-daniel-e9cf1.firebaseapp.com; form-action 'self' https://formspree.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    Content-Security-Policy = "default-src 'self'; script-src https://danielhiguerasalba.es/js/ https://www.danielhiguerasalba.es/js/ https://webdanielhigueras.netlify.app/js/ https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://i.vimeocdn.com; media-src 'self' blob: https://res.cloudinary.com https://*.r2.cloudflarestorage.com; connect-src 'self' https://*.googleapis.com https://www.gstatic.com https://api.cloudinary.com https://*.r2.cloudflarestorage.com https://formspree.io; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://player.vimeo.com https://web-daniel-e9cf1.firebaseapp.com; form-action 'self' https://formspree.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
