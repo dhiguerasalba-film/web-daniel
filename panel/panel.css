@@ -172,12 +172,20 @@ dialog .frame{margin-bottom:10px}
 .otra{margin-top:8px}
 .hint{font-size:12.5px;color:var(--ash);margin:0;line-height:1.5}
 .hint a{color:inherit}
-.muestra{margin:14px 0;background:#0b0b0b;color:#f2f0ec;border-radius:10px;padding:26px 24px;overflow:hidden;
-  --display:"Anton",sans-serif;--body:"Archivo",sans-serif;--mono:"IBM Plex Mono",monospace;--tit:1}
+.muestra{margin:14px 0;background:#0b0b0b;color:#f2f0ec;border-radius:10px;padding:30px 26px 26px;overflow:hidden;
+  --display:"Didot",serif;--body:"Courier Prime",monospace;--mono:"Courier Prime",monospace;--tit:1;--txt:1;--tit-estilo:italic;--corte:0;--sobre:#a7a49e}
 .muestra p{margin:0 0 12px}
-.muestra .m-det{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#a7a49e}
-.muestra .m-tit{font-family:var(--display);font-size:calc(clamp(40px,7vw,84px) * var(--tit));line-height:.9;text-transform:lowercase;overflow-wrap:break-word}
-.muestra .m-txt{font-family:var(--body);font-weight:300;font-size:15px;line-height:1.55;max-width:52ch}
+.muestra .m-sobre,.muestra .m-det{font-family:var(--mono);font-size:calc(11px * var(--txt));letter-spacing:.16em;text-transform:uppercase;color:#a7a49e}
+.muestra .m-sobre{color:var(--sobre)}
+.muestra .m-tit{font-family:var(--display);font-style:var(--tit-estilo);font-optical-sizing:auto;font-size:calc(clamp(44px,8vw,96px) * var(--tit));line-height:.86;
+  text-transform:lowercase;overflow-wrap:break-word;clip-path:inset(-.4em -.4em var(--corte) -.4em)}
+.muestra .m-txt{font-family:var(--body);font-weight:300;font-size:calc(15px * var(--txt));line-height:1.55}
+.lbl{font-size:12.5px;color:var(--ash)}
+.check{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--fg);cursor:pointer}
+.colores{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.colores button{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
+.colores button[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--bg) inset}
+.colores input[type=color]{width:34px;height:34px;border:0;padding:0;background:none;cursor:pointer}
 
 /* botón de modo día / noche */
 .tema{background:none;border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer;color:var(--fg);font-size:13px;display:inline-flex;gap:6px;align-items:center}

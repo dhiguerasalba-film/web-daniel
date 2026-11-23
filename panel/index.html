@@ -42,7 +42,7 @@
       <a href="#contacto">Contacto</a>
       <a href="#redes">Redes sociales</a>
       <a href="#fondos">Fotos de fondo</a>
-      <a href="#letras">Letras</a>
+      <a href="#letras">Letras y estilo</a>
       <p class="grp">Privado</p>
       <a href="#videos">Vídeos privados</a>
       <a href="#codigos">Códigos de acceso</a>
@@ -183,26 +183,34 @@
     </section>
 
     <section data-sec="letras" hidden>
-      <header class="sec-h"><h2>Letras</h2><p>Elige la letra de cada parte de la web. Abajo ves cómo queda antes de guardar.</p></header>
+      <header class="sec-h"><h2>Letras y estilo</h2><p>Letra, tamaño y color del texto de la web. Abajo ves cómo queda antes de guardar.</p></header>
       <div class="card grid2">
-        <div class="f"><label for="l-titulos">Títulos grandes y nombres de trabajos</label><select id="l-titulos" data-papel="titulos"></select>
+        <div class="f"><label for="l-titulos">Letra de los títulos y tu nombre</label><select id="l-titulos" data-papel="titulos"></select>
           <input id="l-titulos-otra" class="otra" placeholder="Nombre exacto en Google Fonts" hidden></div>
-        <div class="f"><label for="l-texto">Texto (bio, descripciones)</label><select id="l-texto" data-papel="texto"></select>
+        <div class="f"><label for="l-texto">Letra del texto (entradillas, bio, descripciones)</label><select id="l-texto" data-papel="texto"></select>
           <input id="l-texto-otra" class="otra" placeholder="Nombre exacto en Google Fonts" hidden></div>
-        <div class="f"><label for="l-detalles">Detalles (menú, etiquetas, botones)</label><select id="l-detalles" data-papel="detalles"></select>
+        <div class="f"><label for="l-detalles">Letra de los detalles (menú, texto sobre los títulos, botones)</label><select id="l-detalles" data-papel="detalles"></select>
           <input id="l-detalles-otra" class="otra" placeholder="Nombre exacto en Google Fonts" hidden></div>
+        <div class="f"><span class="lbl">Títulos</span>
+          <label class="check"><input type="checkbox" id="l-cursiva"> En cursiva</label></div>
         <div class="f"><label for="l-escala">Tamaño de los títulos: <b id="l-escala-v">100 %</b></label>
           <input id="l-escala" type="range" min="60" max="130" step="5" value="100"></div>
-        <p class="hint full">¿Quieres otra? Búscala en <a href="https://fonts.google.com/?lang=es_Latn" target="_blank" rel="noopener">fonts.google.com</a>, elige «Otra de Google Fonts» y escribe su nombre tal cual sale allí (por ejemplo: <i>Space Grotesk</i>). Si una letra es más ancha que la de ahora, baja un poco el tamaño de los títulos.</p>
+        <div class="f"><label for="l-texto-escala">Tamaño del texto: <b id="l-texto-escala-v">100 %</b></label>
+          <input id="l-texto-escala" type="range" min="80" max="130" step="5" value="100"></div>
+        <div class="f"><label for="l-recorte">Recorte de los títulos por abajo (como el cartel): <b id="l-recorte-v">12 %</b></label>
+          <input id="l-recorte" type="range" min="0" max="40" step="2" value="12"></div>
+        <div class="f"><span class="lbl">Color del texto pequeño sobre los títulos</span>
+          <div class="colores" id="l-colores"></div></div>
+        <p class="hint full">La «Didot» sale con la Didot de verdad en Mac, iPhone e iPad; en Windows y Android se ve con Bodoni Moda, que es casi igual. ¿Quieres otra letra? Búscala en <a href="https://fonts.google.com/?lang=es_Latn" target="_blank" rel="noopener">fonts.google.com</a>, elige «Otra de Google Fonts» y escribe su nombre tal cual sale allí.</p>
       </div>
       <div class="muestra" id="l-muestra">
-        <p class="m-det">director · realizador · madrid</p>
-        <p class="m-tit">daniel higueras alba</p>
-        <p class="m-txt">Cuento historias con imagen en movimiento: videoclips, publicidad y documental. Me gusta rodar con poca gente y mucha luz natural.</p>
+        <p class="m-sobre">director · realizador · videógrafo</p>
+        <p class="m-tit"><span>sigo aquí.</span></p>
+        <p class="m-txt">Documental, videoclip y publicidad en Madrid.</p>
         <p class="m-det">portfolio &nbsp; bio &nbsp; contacto &nbsp; redes</p>
       </div>
-      <div class="bar"><button class="btn primary" type="button" id="l-guardar">Guardar letras</button>
-        <button class="btn" type="button" id="l-original">Volver a las de origen</button></div>
+      <div class="bar"><button class="btn primary" type="button" id="l-guardar">Guardar</button>
+        <button class="btn" type="button" id="l-original">Volver a lo de origen</button></div>
     </section>
 
     <section data-sec="videos" hidden>

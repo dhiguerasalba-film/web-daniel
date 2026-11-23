@@ -3,7 +3,7 @@ import { db, auth, configurado, mezclar, cld } from "./firebase.js";
 import { CONFIG_INICIAL, TRABAJOS_INICIALES } from "./contenido-inicial.js";
 import { leerVideo } from "./video.js";
 import { marcarComoDani } from "./visitas.js";
-import { CATALOGO, DEFECTO, receta, nombreValido } from "./letras.js";
+import { CATALOGO, DEFECTO, receta, nombreValido, colorValido } from "./letras.js";
 import {
   signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, sendSignInLinkToEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -197,7 +197,22 @@ function pintarFondos(){
 // ---------- letras ----------
 const PAPELES = ["titulos", "texto", "detalles"];
 const OTRA = "__otra__";
+// colores para el texto pequeño de encima de los títulos ("" = el gris de siempre)
+const COLORES = [["", "Gris (el de siempre)", "#a7a49e"], ["#f2f0ec", "Blanco roto"], ["#d8432f", "Rojo REC"], ["#c9a46a", "Dorado"],
+  ["#e3c28a", "Arena"], ["#8fb3c9", "Azul frío"], ["#b9c99a", "Verde salvia"]];
+let colorSobre = "";
 function enCatalogo(papel, n){ return Object.values(CATALOGO[papel]).some(g => g.some(([x]) => x === n)); }
+function pintarColores(){
+  const caja = $("#l-colores");
+  const sel = colorValido(colorSobre) ? colorSobre.toLowerCase() : "";
+  const propio = sel && !COLORES.some(([c]) => c === sel);
+  const libre = el("input", { type: "color", title: "Otro color", "aria-label": "Otro color", value: propio ? sel : "#ffffff" });
+  libre.addEventListener("input", () => { colorSobre = libre.value; pintarColores(); muestraLetras(); });
+  caja.replaceChildren(...COLORES.map(([c, nombre, ver]) => el("button", { type: "button", title: nombre, "aria-label": nombre,
+      "aria-pressed": String(c === sel), style: `background:${ver || c}`,
+      onclick: () => { colorSobre = c; pintarColores(); muestraLetras(); } })), libre);
+  if(propio) libre.classList.add("activo");
+}
 function pintarLetras(){
   const l = { ...DEFECTO, ...(cfg.letras || {}) };
   PAPELES.forEach(papel => {
@@ -210,10 +225,19 @@ function pintarLetras(){
     sel.value = propia ? OTRA : l[papel];
     otra.hidden = !propia; otra.value = propia ? l[papel] : "";
   });
-  $("#l-escala").value = l.escala; muestraLetras();
+  $("#l-cursiva").checked = !!l.cursiva;
+  $("#l-escala").value = l.escala; $("#l-texto-escala").value = l.escalaTexto; $("#l-recorte").value = l.recorte;
+  colorSobre = l.colorSobre || ""; pintarColores();
+  muestraLetras();
 }
 function leerLetras(){
-  const l = { escala: Number($("#l-escala").value) || 100 };
+  const l = {
+    escala: Number($("#l-escala").value) || 100,
+    escalaTexto: Number($("#l-texto-escala").value) || 100,
+    recorte: Number($("#l-recorte").value) || 0,
+    cursiva: $("#l-cursiva").checked,
+    colorSobre
+  };
   PAPELES.forEach(papel => {
     const sel = $(`#l-${papel}`);
     l[papel] = sel.value === OTRA ? $(`#l-${papel}-otra`).value.trim().replace(/\s+/g, " ") : sel.value;
@@ -227,8 +251,10 @@ function muestraLetras(){
     if(!link){ link = el("link", { rel: "stylesheet", id: "muestra-" + papel }); document.head.append(link); }
     if(link.href !== r.enlaces[papel]) link.href = r.enlaces[papel];
   });
-  for(const [k, v] of Object.entries(r.vars)) m.style.setProperty(k, v);
+  for(const [k, v] of Object.entries(r.vars)) m.style.setProperty(k, v === "var(--ash)" ? "#a7a49e" : v);
   $("#l-escala-v").textContent = l.escala + " %";
+  $("#l-texto-escala-v").textContent = l.escalaTexto + " %";
+  $("#l-recorte-v").textContent = l.recorte ? l.recorte + " %" : "sin recorte";
 }
 let tLetras;
 PAPELES.forEach(papel => {
@@ -239,18 +265,18 @@ PAPELES.forEach(papel => {
   });
   $(`#l-${papel}-otra`).addEventListener("input", () => { clearTimeout(tLetras); tLetras = setTimeout(muestraLetras, 600); });
 });
-$("#l-escala").addEventListener("input", muestraLetras);
+["#l-escala", "#l-texto-escala", "#l-recorte", "#l-cursiva"].forEach(s => $(s).addEventListener("input", muestraLetras));
 $("#l-guardar").addEventListener("click", e => ocupado(e.target, async () => {
   const l = leerLetras();
   for(const papel of PAPELES) if(!nombreValido(l[papel]))
     throw new Error("Revisa el nombre de la letra: solo letras, números y espacios, tal cual sale en Google Fonts.");
   await setDoc(refCfg(), { letras: l }, { merge: true });
   cfg = mezclar(cfg, { letras: l }); existe = true;
-  toast("Letras guardadas. Recarga la web para verlas.");
+  toast("Guardado. Recarga la web para verlo.");
 }));
 $("#l-original").addEventListener("click", () => {
   cfg = mezclar(cfg, { letras: { ...DEFECTO } }); pintarLetras();
-  toast("Puestas las de origen. Pulsa «Guardar letras» para dejarlas así.");
+  toast("Puesto lo de origen. Pulsa «Guardar» para dejarlo así.");
 });
 
 // ---------- portfolio ----------

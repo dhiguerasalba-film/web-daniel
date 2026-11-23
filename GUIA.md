@@ -113,7 +113,7 @@ Cada vez que Otto sube un cambio de diseño a GitHub, Netlify publica la web sol
 - **Portfolio**: *+ Nuevo trabajo*, rellena los datos y sube el vídeo o pon un enlace externo. Las flechas cambian el orden. «Visible» lo enseña u oculta. «Destacado» lo pone en la portada.
 - **Fotos de fondo**: cambia la foto de cada sección. «Volver a la original» recupera la de siempre.
 - **Modo día / noche**: botón abajo en el menú (y en la pantalla de entrada) para ver el panel con fondo claro u oscuro. Se recuerda en cada navegador.
-- **Letras**: elige la letra de los títulos, del texto y de los detalles (menú, etiquetas), y el tamaño de los títulos. Se ve una muestra antes de guardar. Vale cualquier letra de Google Fonts escribiendo su nombre.
+- **Letras y estilo**: letra de los títulos (por defecto Didot en cursiva) y del texto (Courier), cursiva sí/no, tamaño de títulos y de texto, recorte de los títulos por abajo como el cartel y color del texto pequeño sobre los títulos. Muestra en vivo antes de guardar.
 - **Mensajes**: los nuevos llevan un punto rojo. «Responder» abre tu correo.
 
 ### Vídeos privados

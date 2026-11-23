@@ -45,7 +45,7 @@ export const CONFIG_INICIAL = {
     ]
   },
   fondos: { inicio: "", portfolio: "", bio: "", contacto: "", redes: "" },
-  letras: { titulos: "Anton", texto: "Archivo", detalles: "IBM Plex Mono", escala: 100 }
+  letras: { titulos: "Didot", texto: "Courier Prime", detalles: "Courier Prime", cursiva: true, recorte: 12, escala: 100, escalaTexto: 100, colorSobre: "" }
 };
 
 export const TRABAJOS_INICIALES = [
