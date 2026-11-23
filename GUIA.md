@@ -157,3 +157,10 @@ netlify/lib/comun.mjs   código compartido de las funciones
 firestore.rules         reglas de seguridad (paso 5)
 img/                    fotos de fondo originales
 ```
+
+## Política de seguridad (netlify.toml)
+
+La web solo puede cargar cosas de los servicios que están en la lista `Content-Security-Policy` de `netlify.toml`
+(Firebase, Cloudinary, Cloudflare R2, YouTube, Vimeo, Google Fonts y Formspree). Si se añade un servicio nuevo y
+no funciona, lo primero es mirar ahí. Tampoco se puede meter código `<script>` dentro del HTML: va siempre en un
+archivo de `js/`.
